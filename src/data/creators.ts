@@ -256,20 +256,20 @@ export const agency = {
     principles: [
       {
         index: "01",
-        title: "Transparent",
-        body: "Paid content is labeled according to each outlet's policy.",
+        title: "Guaranteed Publication After Initial Assessment",
+        body: "We guarantee publication once your content passes our initial assessment and meets the agreed requirements.",
         tone: "yellow",
       },
       {
         index: "02",
-        title: "Relevant",
-        body: "We would rather pick five channels that fit than fifty that merely exist.",
+        title: "Direct-to-Publisher Access",
+        body: "Work directly with publishers through our media network for a more efficient, transparent, and streamlined publication process.",
         tone: "mint",
       },
       {
         index: "03",
-        title: "Measurable",
-        body: 'Every campaign ends with a report, not just a "published" message.',
+        title: "Free Editorial Consultation",
+        body: "Get complimentary guidance to tailor your content to Indonesian readers, local audience preferences, and the editorial policies of Indonesian media outlets.",
         tone: "navy",
       },
     ],

@@ -4,10 +4,10 @@ import HeroSignalFunnel from "./HeroSignalFunnel.astro";
 import { agency } from "../data/creators";
 
 const logos = [
-  { src: "/hero/logo1.png", w: 168 },
-  { src: "/hero/logo2.png", w: 132 },
-  { src: "/hero/logo3.png", w: 128 },
-  { src: "/hero/logo4.png", w: 148 },
+  { src: "/hero/logo-numbers.png" },
+  { src: "/hero/logo-mexc.png" },
+  { src: "/hero/logo-tokocrypto.png" },
+  { src: "/hero/logo-pln.png" },
 ];
 ---
 
@@ -39,7 +39,7 @@ const logos = [
       <div class="hero-logos" aria-hidden="true">
         <div class="hero-logos-track">
           {[...logos, ...logos].map((logo) => (
-            <img src={logo.src} alt="" style={`width:${logo.w}px`} />
+            <img src={logo.src} alt="" loading="lazy" decoding="async" />
           ))}
         </div>
       </div>
@@ -256,15 +256,18 @@ const logos = [
   .hero-logos-track {
     display: flex;
     align-items: center;
-    gap: 28px;
+    gap: 64px;
     width: max-content;
     animation: logos 28s linear infinite;
   }
 
   .hero-logos img {
-    height: 28px;
+    display: block;
+    height: 24px;
     width: auto;
+    max-height: 24px;
     object-fit: contain;
+    flex: 0 0 auto;
     filter: brightness(0) invert(1);
     opacity: 0.72;
   }
