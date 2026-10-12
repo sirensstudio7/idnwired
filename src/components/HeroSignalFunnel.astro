@@ -1,0 +1,41 @@
+---
+/** Hero signal-line funnel — full-bleed behind copy. */
+---
+
+<div class="hero-signal" data-hero-signal-root aria-hidden="true"></div>
+
+<script>
+  import { bootHeroSignalFunnel } from "../scripts/hero-signal-funnel";
+
+  const start = () => {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", bootHeroSignalFunnel, {
+        once: true,
+      });
+    } else {
+      bootHeroSignalFunnel();
+    }
+  };
+
+  start();
+  document.addEventListener("astro:page-load", bootHeroSignalFunnel);
+</script>
+
+<style>
+  .hero-signal {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 2;
+    background: transparent;
+  }
+
+  .hero-signal :global(canvas) {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    background: transparent !important;
+  }
+</style>

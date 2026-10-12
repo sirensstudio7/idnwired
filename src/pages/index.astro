@@ -1,0 +1,30 @@
+---
+import About from "../components/About.astro";
+import Services from "../components/Services.astro";
+import HowItWorks from "../components/HowItWorks.astro";
+import Impact from "../components/Impact.astro";
+import WhyUs from "../components/WhyUs.astro";
+import Faq from "../components/Faq.astro";
+import CtaBanner from "../components/CtaBanner.astro";
+import Hero from "../components/Hero.astro";
+import MenuOverlay from "../components/MenuOverlay.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="IDNWIRED — Indonesia News Wire"
+  description="Indonesia News Wire distributes press releases across 3,000+ online media outlets, 1,000+ creators, and print & TV partners — targeted by niche, city, and audience."
+  bodyClass="page-home"
+>
+  <MenuOverlay />
+  <main>
+    <Hero />
+    <About />
+    <Services />
+    <HowItWorks />
+    <Impact />
+    <WhyUs />
+    <Faq />
+  </main>
+  <CtaBanner />
+</BaseLayout>

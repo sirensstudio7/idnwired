@@ -1,0 +1,385 @@
+---
+import { agency } from "../data/creators";
+
+const { label, headline, items } = agency.faq;
+const [headlineOne, headlineTwo] = headline;
+---
+
+<section class="faq wrap" id="faq">
+  <header class="faq-head">
+    <p class="faq-chip">
+      <span class="faq-chip-dot" aria-hidden="true"></span>
+      {label}
+    </p>
+    <h2>
+      <span>{headlineOne}</span>
+      <span>{headlineTwo}</span>
+    </h2>
+  </header>
+
+  <div class="faq-list">
+    {
+      items.map((item, index) => (
+        <div
+          class:list={["faq-item", { "is-expanded": index === 0 }]}
+          data-faq-item
+        >
+          <button
+            type="button"
+            class="faq-trigger"
+            aria-expanded={index === 0 ? "true" : "false"}
+          >
+            <span class="faq-question">{item.question}</span>
+            <span class="faq-toggle" aria-hidden="true">
+              <span class="faq-plus">
+                <span class="faq-bar is-h"></span>
+                <span class="faq-bar is-v"></span>
+              </span>
+            </span>
+          </button>
+          <div class="faq-body" data-faq-body hidden={index !== 0 ? true : undefined}>
+            <div class="faq-body-inner">
+              <p class="faq-answer">{item.answer}</p>
+            </div>
+          </div>
+        </div>
+      ))
+    }
+  </div>
+</section>
+
+<script>
+  const FAQ_MS = 520;
+  const FAQ_EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
+
+  function prefersReducedMotion() {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  function setExpanded(item: HTMLElement, expanded: boolean) {
+    item.classList.toggle("is-expanded", expanded);
+    const trigger = item.querySelector<HTMLButtonElement>(".faq-trigger");
+    if (trigger) trigger.setAttribute("aria-expanded", expanded ? "true" : "false");
+  }
+
+  function animateBody(body: HTMLElement, open: boolean): Promise<void> {
+    if (prefersReducedMotion()) {
+      body.hidden = !open;
+      body.style.height = open ? "auto" : "";
+      body.style.overflow = "";
+      body.style.transition = "";
+      return Promise.resolve();
+    }
+
+    const inner = body.querySelector<HTMLElement>(".faq-body-inner");
+    if (!inner) return Promise.resolve();
+
+    return new Promise((resolve) => {
+      body.style.overflow = "hidden";
+      body.style.transition = `height ${FAQ_MS}ms ${FAQ_EASE}`;
+
+      if (open) {
+        body.hidden = false;
+        body.style.height = "0px";
+        const target = inner.offsetHeight;
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            body.style.height = `${target}px`;
+          });
+        });
+
+        const done = (event: TransitionEvent) => {
+          if (event.target !== body || event.propertyName !== "height") return;
+          body.removeEventListener("transitionend", done);
+          body.style.height = "auto";
+          body.style.overflow = "";
+          body.style.transition = "";
+          resolve();
+        };
+        body.addEventListener("transitionend", done);
+      } else {
+        const start = body.offsetHeight || inner.offsetHeight;
+        body.style.height = `${start}px`;
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            body.style.height = "0px";
+          });
+        });
+
+        const done = (event: TransitionEvent) => {
+          if (event.target !== body || event.propertyName !== "height") return;
+          body.removeEventListener("transitionend", done);
+          body.hidden = true;
+          body.style.height = "";
+          body.style.overflow = "";
+          body.style.transition = "";
+          resolve();
+        };
+        body.addEventListener("transitionend", done);
+      }
+    });
+  }
+
+  async function closeItem(item: HTMLElement) {
+    if (!item.classList.contains("is-expanded")) return;
+    const body = item.querySelector<HTMLElement>("[data-faq-body]");
+    if (!body) return;
+    setExpanded(item, false);
+    await animateBody(body, false);
+  }
+
+  async function openItem(item: HTMLElement) {
+    if (item.classList.contains("is-expanded")) return;
+    const body = item.querySelector<HTMLElement>("[data-faq-body]");
+    if (!body) return;
+    setExpanded(item, true);
+    await animateBody(body, true);
+  }
+
+  async function toggleItem(item: HTMLElement, allItems: HTMLElement[]) {
+    const isOpen = item.classList.contains("is-expanded");
+    if (isOpen) {
+      await closeItem(item);
+      return;
+    }
+
+    const closing = allItems.filter(
+      (other) => other !== item && other.classList.contains("is-expanded"),
+    );
+    await Promise.all(closing.map((other) => closeItem(other)));
+    await openItem(item);
+  }
+
+  function initFaq() {
+    const list = document.querySelector<HTMLElement>(".faq-list");
+    if (!list || list.dataset.faqReady) return;
+    list.dataset.faqReady = "1";
+
+    const items = [...list.querySelectorAll<HTMLElement>("[data-faq-item]")];
+
+    items.forEach((item) => {
+      const body = item.querySelector<HTMLElement>("[data-faq-body]");
+      if (!body) return;
+
+      if (item.classList.contains("is-expanded")) {
+        body.hidden = false;
+        body.style.height = "auto";
+      } else {
+        body.hidden = true;
+        body.style.height = "0px";
+      }
+
+      const trigger = item.querySelector<HTMLButtonElement>(".faq-trigger");
+      trigger?.addEventListener("click", () => {
+        void toggleItem(item, items);
+      });
+    });
+  }
+
+  initFaq();
+  document.addEventListener("astro:page-load", initFaq);
+</script>
+
+<style>
+  .faq {
+    scroll-margin-top: 88px;
+    padding: 80px 0 120px;
+    font-family: "Sora", var(--sans);
+    color: #282560;
+  }
+
+  .faq-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    margin: 0 auto 56px;
+    text-align: center;
+  }
+
+  .faq-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: #282560;
+  }
+
+  .faq-chip-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #282560;
+  }
+
+  .faq-head h2 {
+    margin: 0;
+    font-size: clamp(36px, 5vw, 56px);
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+  }
+
+  .faq-head h2 span {
+    display: block;
+  }
+
+  .faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 52rem;
+    margin-inline: auto;
+  }
+
+  .faq-item {
+    border-radius: 16px;
+    background: #fff;
+  }
+
+  .faq-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    width: 100%;
+    padding: 20px 4px 20px 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .faq-question {
+    font-size: clamp(18px, 2.2vw, 22px);
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: -0.03em;
+  }
+
+  .faq-toggle {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(39, 38, 102, 0.12);
+    border-radius: 50%;
+    background: transparent;
+    transition:
+      background 0.52s cubic-bezier(0.32, 0.72, 0, 1),
+      border-color 0.52s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  .faq-plus {
+    position: relative;
+    width: 14px;
+    height: 14px;
+    transition: transform 0.52s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  .faq-bar {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    background: #282560;
+    transform: translate(-50%, -50%);
+    transition: background 0.52s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  .faq-bar.is-h {
+    width: 14px;
+    height: 1.5px;
+  }
+
+  .faq-bar.is-v {
+    width: 1.5px;
+    height: 14px;
+  }
+
+  .faq-item.is-expanded .faq-toggle {
+    background: #282560;
+    border-color: #282560;
+  }
+
+  .faq-item.is-expanded .faq-plus {
+    transform: rotate(45deg);
+  }
+
+  .faq-item.is-expanded .faq-bar {
+    background: #fff;
+  }
+
+  .faq-body {
+    height: 0;
+    overflow: hidden;
+    will-change: height;
+  }
+
+  .faq-body-inner {
+    overflow: hidden;
+  }
+
+  .faq-answer {
+    margin: 0;
+    padding: 0 56px 20px 0;
+    max-width: 42rem;
+    font-size: 16px;
+    line-height: 1.55;
+    letter-spacing: -0.02em;
+    text-align: left;
+    color: rgba(39, 38, 102, 0.85);
+    opacity: 0;
+    transform: translateY(-8px);
+    transition:
+      opacity 0.45s cubic-bezier(0.32, 0.72, 0, 1) 0.06s,
+      transform 0.52s cubic-bezier(0.32, 0.72, 0, 1) 0.04s;
+  }
+
+  .faq-item.is-expanded .faq-answer {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .faq-item:not(.is-expanded) .faq-answer {
+    transition-delay: 0s;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .faq-body {
+      will-change: auto;
+    }
+
+    .faq-answer,
+    .faq-toggle,
+    .faq-plus,
+    .faq-bar {
+      transition: none;
+    }
+
+    .faq-item.is-expanded .faq-answer {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .faq {
+      padding: 48px 0 96px;
+    }
+
+    .faq-trigger {
+      padding-right: 0;
+    }
+
+    .faq-answer {
+      padding-right: 0;
+    }
+  }
+</style>

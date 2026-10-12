@@ -1,0 +1,280 @@
+---
+import { agency } from "../data/creators";
+import HairlineFigure from "./HairlineFigure.astro";
+
+const { kicker, headline, intro, facts, cards, niches } = agency.impact;
+const [attention, trust, nichesCard, channels, seo, sales, reports] = cards;
+---
+
+<section class="impact wrap" id="impact">
+  <header class="impact-head">
+    <p class="impact-chip">{kicker}</p>
+    <h2>{headline}</h2>
+    <p class="impact-lede">{intro}</p>
+  </header>
+
+  <div class="impact-grid">
+    <article class="impact-card is-visual">
+      <div class="impact-art">
+        <HairlineFigure name="riffle" label="Cards competing for attention" />
+      </div>
+      <div class="impact-text">
+        <h3>{attention.title}</h3>
+        <p>{attention.body}</p>
+      </div>
+    </article>
+
+    <article class="impact-card is-visual">
+      <div class="impact-art">
+        <HairlineFigure name="padlock" label="A padlock that opens as trust is earned" />
+      </div>
+      <div class="impact-text">
+        <h3>{trust.title}</h3>
+        <p>{trust.body}</p>
+      </div>
+    </article>
+
+    <article class="impact-card is-chips">
+      <div class="impact-text">
+        <h3>{nichesCard.title}</h3>
+        <p>{nichesCard.body}</p>
+      </div>
+      <ul class="impact-chips">
+        {
+          niches.map((niche) => (
+            <li>{niche}</li>
+          ))
+        }
+      </ul>
+    </article>
+
+    <article class="impact-card is-wide is-visual">
+      <div class="impact-art is-wide">
+        <HairlineFigure name="patch" label="A patch panel of connected channels" />
+      </div>
+      <div class="impact-text">
+        <h3>{channels.title}</h3>
+        <p>{channels.body}</p>
+      </div>
+    </article>
+
+    <article class="impact-card is-visual">
+      <div class="impact-art">
+        <HairlineFigure name="loupe" label="A loupe searching a page" />
+      </div>
+      <div class="impact-text">
+        <h3>{seo.title}</h3>
+        <p>{seo.body}</p>
+      </div>
+    </article>
+
+    <article class="impact-card is-visual">
+      <div class="impact-art">
+        <HairlineFigure name="drawer" label="A cabinet of materials to share" />
+      </div>
+      <div class="impact-text">
+        <h3>{sales.title}</h3>
+        <p>{sales.body}</p>
+      </div>
+    </article>
+
+    <article class="impact-card is-visual">
+      <div class="impact-art">
+        <HairlineFigure name="plot" label="A report chart you can stand behind" />
+      </div>
+      <div class="impact-text">
+        <h3>{reports.title}</h3>
+        <p>{reports.body}</p>
+      </div>
+    </article>
+
+    <article class="impact-card is-cta">
+      <ul class="impact-metrics">
+        {
+          facts.map((fact) => (
+            <li>
+              <b>{fact.value}</b>
+              <span>{fact.label}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </article>
+  </div>
+</section>
+
+<style>
+  .impact {
+    scroll-margin-top: 88px;
+    padding: 160px 0 176px;
+    font-family: "Sora", var(--sans);
+    color: #282560;
+  }
+
+  .impact-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 0 56px;
+    text-align: center;
+  }
+
+  .impact-chip {
+    display: inline-flex;
+    align-items: center;
+    margin: 0 0 20px;
+    padding: 8px 16px;
+    border: 1px solid rgba(39, 38, 102, 0.14);
+    border-radius: 100px;
+    font-size: 14px;
+    letter-spacing: -0.03em;
+    color: #747098;
+  }
+
+  .impact-head h2 {
+    margin: 0 0 16px;
+    font-size: clamp(28px, 4vw, 44px);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+  }
+
+  .impact-lede {
+    margin: 0;
+    max-width: 36rem;
+    text-align: center;
+    font-size: 16px;
+    line-height: 1.5;
+    letter-spacing: -0.03em;
+    color: #747098;
+  }
+
+  .impact-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 280px));
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .impact-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 280px;
+    padding: 24px;
+    border-radius: 24px;
+    background: #f4f5f6;
+  }
+
+  .impact-card.is-wide {
+    grid-column: span 2;
+  }
+
+  .impact-card.is-cta {
+    justify-content: center;
+    background: #f4f5f6;
+  }
+
+  .impact-art {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 148px;
+    margin-bottom: 8px;
+    --hairline-plate: #f4f5f6;
+    --hairline-hi: #282560;
+    --hairline-edge: #747098;
+    --hairline-mid: #8fd4cc;
+    --hairline-lo: #d7d5ea;
+    --hairline-stroke: 1;
+  }
+
+  .impact-art.is-wide :global(.hairline-mount) {
+    width: 220px;
+  }
+
+  .impact-text {
+    margin-top: auto;
+  }
+
+  .impact-card h3 {
+    margin: 0 0 8px;
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1.24;
+  }
+
+  .impact-card p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.44;
+    letter-spacing: -0.03em;
+    color: #747098;
+  }
+
+  .impact-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 18px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .impact-chips li {
+    padding: 7px 12px;
+    border: 1px solid rgba(39, 38, 102, 0.12);
+    border-radius: 100px;
+    background: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: #747098;
+  }
+
+  .impact-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .impact-metrics li {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .impact-metrics b {
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+  }
+
+  .impact-metrics span {
+    font-size: 12px;
+    color: #747098;
+  }
+
+  @media (max-width: 980px) {
+    .impact {
+      padding: 104px 0 120px;
+    }
+
+    .impact-grid {
+      grid-template-columns: repeat(2, minmax(0, 280px));
+    }
+
+    .impact-card.is-wide {
+      grid-column: auto;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .impact-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

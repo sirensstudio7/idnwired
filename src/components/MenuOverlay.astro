@@ -1,0 +1,67 @@
+---
+import { agency } from "../data/creators";
+
+const links = [
+  { href: "/", label: "home" },
+  { href: "/#services", label: "services" },
+  { href: "/#about", label: "about us" },
+  { href: "/network", label: "our network" },
+  { href: "/#why", label: "contact" },
+];
+---
+
+<div class="menu-overlay" id="site-menu" aria-hidden="true">
+  <div class="menu-overlay-top">
+    <a class="logo" href="/" aria-label={`${agency.name} home`}>
+      <svg viewBox="0 0 34 34" fill="none" aria-hidden="true">
+        <path d="M5 24c6-8 18-8 24 0" stroke="#111212" stroke-width="2.2" stroke-linecap="round" />
+        <path d="M8 18c5-6.5 13-6.5 18 0" stroke="#111212" stroke-width="2.2" stroke-linecap="round" />
+        <path d="M11 12c3.4-4.2 8.6-4.2 12 0" stroke="#111212" stroke-width="2.2" stroke-linecap="round" />
+      </svg>
+    </a>
+    <button class="menu-trigger menu-trigger--close" type="button" data-menu-toggle aria-label="Close menu">
+      <span class="menu-trigger-label">CLOSE</span>
+      <span class="menu-trigger-bars menu-trigger-bars--close" aria-hidden="true">
+        <span></span>
+        <span></span>
+      </span>
+    </button>
+  </div>
+  <nav class="menu-nav" aria-label="Primary">
+    {links.map((link) => (
+      <a href={link.href} data-menu-close>{link.label}</a>
+    ))}
+  </nav>
+</div>
+
+<script>
+  function menuEl() {
+    return document.getElementById("site-menu");
+  }
+
+  function setOpen(open: boolean) {
+    const menu = menuEl();
+    if (!menu) return;
+    menu.classList.toggle("is-open", open);
+    menu.setAttribute("aria-hidden", String(!open));
+    document.body.classList.toggle("menu-locked", open);
+    document.querySelectorAll("[data-menu-open]").forEach((button) => {
+      button.setAttribute("aria-expanded", String(open));
+    });
+  }
+
+  document.addEventListener("click", (event) => {
+    const target = event.target as HTMLElement | null;
+    if (target?.closest("[data-menu-open]")) {
+      setOpen(true);
+      return;
+    }
+    if (target?.closest("[data-menu-toggle], [data-menu-close]")) {
+      setOpen(false);
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") setOpen(false);
+  });
+</script>

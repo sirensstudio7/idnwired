@@ -1,0 +1,40 @@
+---
+interface Props {
+  name: "riffle" | "padlock" | "patch" | "loupe" | "drawer" | "plot" | "keyboard" | "laptop";
+  label: string;
+}
+
+const { name, label } = Astro.props;
+---
+
+<div class="hairline-mount" data-hairline={name} data-label={label}></div>
+
+<script>
+  import { drawer, keyboard, laptop, loupe, padlock, patch, plot, riffle } from "@lucasmarkes/hairline";
+
+  const figures = { drawer, keyboard, laptop, loupe, padlock, patch, plot, riffle };
+
+  function mountAll() {
+    document.querySelectorAll<HTMLElement>("[data-hairline]").forEach((el) => {
+      if (el.dataset.hairlineMounted) return;
+      const key = el.dataset.hairline as keyof typeof figures;
+      const draw = figures[key];
+      if (!draw) return;
+      draw(el, {
+        theme: "light",
+        intensity: 0.55,
+        label: el.dataset.label,
+      });
+      el.dataset.hairlineMounted = "1";
+    });
+  }
+
+  mountAll();
+  document.addEventListener("astro:page-load", mountAll);
+</script>
+
+<style>
+  .hairline-mount {
+    width: 180px;
+  }
+</style>

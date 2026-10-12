@@ -1,0 +1,117 @@
+---
+import type { Accent } from "../data/creators";
+
+interface Props {
+  index: number;
+  name: string;
+  date?: string;
+  blurb: string;
+  href: string;
+  tags: string[];
+  cover: string;
+  accent: Accent;
+  cta?: string;
+  flip?: boolean;
+  kind?: string;
+}
+
+const {
+  index,
+  name,
+  date,
+  blurb,
+  href,
+  tags,
+  cover,
+  accent,
+  cta = "VIEW CREATOR",
+  flip = false,
+  kind = "CREATOR",
+} = Astro.props;
+
+const number = String(index).padStart(2, "0");
+---
+
+<article class:list={["folder-card", `is-${accent}`, flip && "is-flip"]}>
+  <div class="folder-copy">
+    <div class="folder-meta">
+      <span>{kind} {number}</span>
+      {date && (
+        <span class="folder-date">
+          <i></i>
+          {date}
+        </span>
+      )}
+    </div>
+    <h3><a href={href}>{name}</a></h3>
+    <p>{blurb}</p>
+    <a class="view-link" href={href}>
+      {cta}
+      <span aria-hidden="true">↗</span>
+    </a>
+    <div class="folder-tags">
+      {tags.map((tag) => (
+        <span class="folder-tag">{tag}</span>
+      ))}
+    </div>
+  </div>
+  <div class="folder-media">
+    <div class="frame">
+      <span class="frame-handle tl"></span>
+      <span class="frame-handle tr"></span>
+      <span class="frame-handle bl"></span>
+      <span class="frame-handle br"></span>
+      <span class="frame-label">IMAGE.JPG</span>
+      <img src={cover} alt="" />
+    </div>
+  </div>
+</article>
+
+<style>
+  .folder-card {
+    grid-template-columns: 1fr 1.05fr;
+    align-items: center;
+  }
+
+  .folder-card.is-flip {
+    grid-template-columns: 1.05fr 1fr;
+  }
+
+  .folder-card.is-flip .folder-copy {
+    order: 2;
+  }
+
+  .folder-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .folder-date i {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .folder-copy,
+  .folder-media {
+    min-width: 0;
+  }
+
+  .folder-media .frame {
+    aspect-ratio: 16 / 10;
+    min-height: 0;
+  }
+
+  @media (max-width: 1100px) {
+    .folder-card,
+    .folder-card.is-flip {
+      grid-template-columns: 1fr;
+    }
+
+    .folder-card.is-flip .folder-copy {
+      order: 0;
+    }
+  }
+</style>

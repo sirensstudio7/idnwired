@@ -1,0 +1,281 @@
+---
+import { agency } from "../data/creators";
+
+const { sections } = agency.marketStats;
+---
+
+<section class="about" id="about">
+  <div class="about-shell">
+    <header class="about-head">
+      <div>
+        <p class="about-kicker">Why Indonesia, now</p>
+        <h2>
+          <span>A Connected Market, a Growing Economy,</span>
+          <span>Capital That Keeps Coming In</span>
+        </h2>
+      </div>
+      <a class="about-talk" href="#why">
+        <span>Let’s talk</span>
+        <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true">
+          <path
+            d="M13.476 9.166 9.006 4.696 10.185 3.518 16.666 10 10.185 16.481 9.006 15.303 13.476 10.833 3.333 10.833 3.333 9.166 Z"
+            fill="currentColor"></path>
+        </svg>
+      </a>
+    </header>
+
+    <div class="about-grid">
+      {
+        sections.map((section, index) => {
+          const [featured, ...support] = section.rows;
+          return (
+            <article class:list={["about-item", { "is-accent": index === 3 }]}>
+              <p class="about-label">
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                {section.title}
+              </p>
+              <p class="about-figure">{featured.number}</p>
+              <p class="about-meaning">{featured.meaning}</p>
+              {
+                support.length > 0 && (
+                  <ul class="about-chips">
+                    {support.map((row) => (
+                      <li>
+                        <b>{row.number}</b>
+                        {row.meaning}
+                      </li>
+                    ))}
+                  </ul>
+                )
+              }
+            </article>
+          );
+        })
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .about {
+    --about-ink: #272666;
+    --about-muted: #747198;
+    --about-line: #d7dce6;
+    --about-bg: #ffffff;
+    --about-mint: #7ed7cc;
+    scroll-margin-top: 88px;
+    background: var(--about-bg);
+    padding: 176px 0 184px;
+    font-family: "Sora", var(--sans);
+    color: var(--about-ink);
+  }
+
+  .about-shell {
+    width: calc(100% - 112px);
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  .about-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 32px 48px;
+    margin-bottom: 72px;
+  }
+
+  .about-kicker {
+    margin: 0 0 12px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--about-muted);
+  }
+
+  .about-head h2 {
+    margin: 0;
+    font-size: clamp(28px, 2.8vw, 44px);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+  }
+
+  .about-head h2 span {
+    display: block;
+    white-space: nowrap;
+  }
+
+  .about-talk {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    height: 52px;
+    padding: 0 22px 0 24px;
+    border: 1.5px solid #282560;
+    border-radius: 100px;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    color: #282560;
+    background: transparent;
+    transition:
+      background 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .about-talk:hover {
+    background: #282560;
+    color: #fff;
+  }
+
+  .about-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+  }
+
+  .about-item {
+    min-width: 0;
+    padding: 8px 28px 0 0;
+    border-right: 1px solid var(--about-line);
+  }
+
+  .about-item:not(:first-child) {
+    padding-left: 28px;
+  }
+
+  .about-item:last-child {
+    border-right: 0;
+    padding-right: 0;
+  }
+
+  .about-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 18px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--about-muted);
+  }
+
+  .about-label span {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    background: rgba(126, 215, 204, 0.35);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--about-ink);
+  }
+
+  .about-figure {
+    margin: 0 0 10px;
+    font-size: clamp(28px, 2.4vw, 40px);
+    font-weight: 500;
+    letter-spacing: -0.045em;
+    line-height: 1.05;
+    white-space: nowrap;
+  }
+
+  .about-meaning {
+    margin: 0 0 22px;
+    max-width: 28ch;
+    font-size: 14px;
+    line-height: 1.5;
+    letter-spacing: -0.02em;
+    color: var(--about-muted);
+  }
+
+  .about-chips {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .about-chips li {
+    font-size: 12px;
+    line-height: 1.4;
+    letter-spacing: -0.02em;
+    color: var(--about-muted);
+  }
+
+  .about-chips b {
+    display: block;
+    margin-bottom: 2px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    color: var(--about-ink);
+  }
+
+  .about-item.is-accent .about-figure {
+    color: #1f7f74;
+  }
+
+  @media (max-width: 1100px) {
+    .about-shell {
+      width: calc(100% - 48px);
+    }
+
+    .about-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      row-gap: 40px;
+    }
+
+    .about-item,
+    .about-item:not(:first-child),
+    .about-item:last-child {
+      padding: 0 24px 0 0;
+    }
+
+    .about-item:nth-child(even) {
+      padding-left: 24px;
+      padding-right: 0;
+      border-right: 0;
+    }
+
+    .about-head h2 span {
+      white-space: normal;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .about {
+      padding: 104px 0 112px;
+    }
+
+    .about-head {
+      flex-direction: column;
+      align-items: flex-start;
+      margin-bottom: 36px;
+    }
+
+    .about-grid {
+      grid-template-columns: 1fr;
+      row-gap: 32px;
+    }
+
+    .about-item,
+    .about-item:not(:first-child),
+    .about-item:nth-child(even),
+    .about-item:last-child {
+      padding: 0 0 32px;
+      border-right: 0;
+      border-bottom: 1px solid var(--about-line);
+    }
+
+    .about-item:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+  }
+</style>

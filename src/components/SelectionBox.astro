@@ -1,0 +1,20 @@
+---
+interface Props {
+  tone?: "cyan" | "ink";
+  class?: string;
+}
+
+const { tone = "cyan", class: className = "" } = Astro.props;
+---
+
+<span class:list={["selection", tone === "ink" && "selection--ink", className]}>
+  <span class="selection-handle tl"></span>
+  <span class="selection-handle tm"></span>
+  <span class="selection-handle tr"></span>
+  <span class="selection-handle ml"></span>
+  <span class="selection-handle mr"></span>
+  <span class="selection-handle bl"></span>
+  <span class="selection-handle bm"></span>
+  <span class="selection-handle br"></span>
+  <slot />
+</span>

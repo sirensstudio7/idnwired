@@ -1,0 +1,383 @@
+---
+import { agency } from "../data/creators";
+
+const { kicker, headline, intro, principles } = agency.whyUs;
+
+const outcomes = [
+  {
+    index: "04",
+    title: "High-Quality Backlinks",
+    body: "Build website authority with relevant links from trusted publications.",
+    tone: "yellow",
+    icon: "link",
+  },
+  {
+    index: "05",
+    title: "Search Visibility",
+    body: "Strengthen your presence in search results and reach more potential customers.",
+    tone: "mint",
+    icon: "search",
+  },
+  {
+    index: "06",
+    title: "SEO & Organic Growth",
+    body: "Support long-term organic growth through strategic digital PR and link building.",
+    tone: "navy",
+    icon: "chart",
+  },
+];
+---
+
+<section class="why wrap" id="why">
+  <div class="why-body">
+    <header class="why-head">
+      <p class="why-kicker">{kicker}</p>
+      <h2>{headline}</h2>
+      <p class="why-lede">{intro}</p>
+
+      <div class="why-stats">
+        <p>
+          <span>5,000+</span>
+          Articles published
+        </p>
+        <p>
+          <span>50+</span>
+          Brands served
+        </p>
+      </div>
+    </header>
+
+    <div class="why-timeline">
+      <span class="why-rail" aria-hidden="true"></span>
+      {
+        principles.map((item) => (
+          <article class="why-entry">
+            <div class={`why-icon is-${item.tone}`} aria-hidden="true">
+              {item.tone === "yellow" && (
+                <svg viewBox="0 0 32 32" aria-hidden="true">
+                  <path
+                    fill="#282560"
+                    d="M11 14V10a5 5 0 0 1 10 0v4h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V16a2 2 0 0 1 2-2h2Zm2 0h6v-4a3 3 0 0 0-6 0v4Z"
+                  />
+                </svg>
+              )}
+              {item.tone === "mint" && (
+                <svg viewBox="0 0 32 32" aria-hidden="true">
+                  <path
+                    fill="#282560"
+                    fill-rule="evenodd"
+                    d="M16 7a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 3a6 6 0 1 0 0 12 6 6 0 0 0 0-12Zm0 2.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              )}
+              {item.tone === "navy" && (
+                <svg viewBox="0 0 32 32" aria-hidden="true">
+                  <path fill="#8fd4cc" d="M8 23V13l5 4 4-7 5 6 2-1v8H8Z" />
+                </svg>
+              )}
+            </div>
+            <div class="why-copy">
+              <p class="why-year">
+                <span></span>
+                {item.index}
+              </p>
+              <h3>{item.title}</h3>
+              <p>{item.body}</p>
+            </div>
+          </article>
+        ))
+      }
+      {
+        outcomes.map((item) => (
+          <article class="why-entry">
+            <div class={`why-icon is-${item.tone}`} aria-hidden="true">
+              {item.icon === "link" && (
+                <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                  <path
+                    d="M13.2 18.8a5 5 0 0 0 7.07 0l2.4-2.4a5 5 0 1 0-7.07-7.07l-1.3 1.3"
+                    stroke={item.tone === "navy" ? "#8fd4cc" : "#282560"}
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
+                  <path
+                    d="M18.8 13.2a5 5 0 0 0-7.07 0l-2.4 2.4a5 5 0 0 0 7.07 7.07l1.3-1.3"
+                    stroke={item.tone === "navy" ? "#8fd4cc" : "#282560"}
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              )}
+              {item.icon === "search" && (
+                <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                  <circle
+                    cx="14.5"
+                    cy="14.5"
+                    r="7.5"
+                    stroke="#282560"
+                    stroke-width="2"
+                  />
+                  <path
+                    d="m20.2 20.2 5.3 5.3"
+                    stroke="#282560"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              )}
+              {item.icon === "chart" && (
+                <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                  <path
+                    d="m7 20 6-6 4.5 4.5L26 9"
+                    stroke="#8fd4cc"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M20 9h6v6"
+                    stroke="#8fd4cc"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              )}
+            </div>
+            <div class="why-copy">
+              <p class="why-year">
+                <span></span>
+                {item.index}
+              </p>
+              <h3>{item.title}</h3>
+              <p>{item.body}</p>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .why {
+    scroll-margin-top: 88px;
+    padding: 160px 0 176px;
+    font-family: "Sora", var(--sans);
+    color: #282560;
+  }
+
+  .why-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 48px 64px;
+    align-items: start;
+  }
+
+  .why-head {
+    max-width: 36rem;
+    padding-top: 12px;
+  }
+
+  @media (min-width: 901px) {
+    .why-head {
+      position: sticky;
+      top: 96px;
+      z-index: 2;
+      align-self: start;
+    }
+  }
+
+  .why-kicker {
+    display: inline-flex;
+    margin: 0 0 20px;
+    padding: 8px 16px;
+    border: 1px solid rgba(39, 38, 102, 0.14);
+    border-radius: 100px;
+    font-size: 14px;
+    letter-spacing: -0.03em;
+    color: #747098;
+  }
+
+  .why-head h2 {
+    margin: 0 0 16px;
+    font-size: clamp(28px, 4vw, 44px);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+  }
+
+  .why-lede {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.5;
+    letter-spacing: -0.03em;
+    color: #747098;
+  }
+
+  .why-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 36px;
+  }
+
+  .why-stats p {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 14px;
+    letter-spacing: -0.02em;
+    color: #747098;
+  }
+
+  .why-stats span {
+    font-size: clamp(32px, 3.4vw, 40px);
+    font-weight: 500;
+    letter-spacing: -0.045em;
+    line-height: 1;
+    color: #282560;
+  }
+
+  .why-timeline {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .why-rail {
+    position: absolute;
+    top: 48px;
+    bottom: 48px;
+    left: 35.25px;
+    z-index: 0;
+    width: 1.5px;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      #c5d1e7 0 8px,
+      transparent 8px 22px
+    );
+  }
+
+  .why-entry {
+    position: relative;
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 28px;
+    align-items: start;
+    padding: 12px 0 48px;
+  }
+
+  .why-entry:last-child {
+    padding-bottom: 12px;
+  }
+
+  .why-icon {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: 0;
+    outline: none;
+    background: #fff;
+    box-shadow: none;
+  }
+
+  .why-icon svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .why-icon.is-yellow {
+    background: #ffdc39;
+  }
+
+  .why-icon.is-mint {
+    background: #8fd4cc;
+  }
+
+  .why-icon.is-navy {
+    background: #282560;
+  }
+
+  .why-copy {
+    padding-top: 6px;
+  }
+
+  .why-year {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 10px;
+    transform: rotate(-2deg);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+  }
+
+  .why-year span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ffdc39;
+  }
+
+  .why-copy h3 {
+    margin: 0 0 8px;
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+  }
+
+  .why-copy p:last-child {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.32;
+    color: #747098;
+  }
+
+  @media (max-width: 900px) {
+    .why-body {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .why {
+      padding: 104px 0 120px;
+    }
+
+    .why-entry {
+      grid-template-columns: 56px minmax(0, 1fr);
+      gap: 16px;
+      padding-bottom: 28px;
+    }
+
+    .why-icon {
+      width: 56px;
+      height: 56px;
+    }
+
+    .why-icon svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .why-rail {
+      top: 40px;
+      bottom: 40px;
+      left: 27.25px;
+    }
+
+    .why-copy h3 {
+      font-size: 20px;
+    }
+  }
+</style>

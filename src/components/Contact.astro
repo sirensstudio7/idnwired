@@ -1,0 +1,107 @@
+---
+import { agency } from "../data/creators";
+---
+
+<section class="contact" id="contact">
+  <div class="wrap contact-inner">
+    <p class="script talk-scribble">let's talk</p>
+    <h2 class="display">Let's Talk</h2>
+    <p class="lede">{agency.closer}</p>
+    <div class="actions">
+      <a class="cta" href={`mailto:${agency.email}?subject=Brand partnership`}>
+        <span class="cta-icon" aria-hidden="true">&gt;&gt;</span>
+        <span class="cta-label">BOOK TALENT</span>
+      </a>
+      <a class="cta ghost" href={`mailto:${agency.email}?subject=Roster inquiry`}>
+        <span class="cta-icon" aria-hidden="true">&gt;&gt;</span>
+        <span class="cta-label">APPLY TO ROSTER</span>
+      </a>
+    </div>
+    <div class="comment">
+      <p class="mono comment-name">{agency.name}</p>
+      <p>{agency.contactNote}</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .contact {
+    padding: 168px 0 176px;
+  }
+
+  .contact-inner {
+    text-align: center;
+  }
+
+  .talk-scribble {
+    margin: 0 0 8px;
+    font-size: 28px;
+  }
+
+  h2 {
+    margin: 0 0 18px;
+    font-size: clamp(40px, 12vw, 160px);
+  }
+
+  .lede {
+    margin: 0 auto 28px;
+    max-width: 46ch;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 36px;
+  }
+
+  .ghost {
+    background: #fff;
+    color: var(--ink);
+    outline: 1.5px solid var(--ink);
+  }
+
+  .ghost .cta-label {
+    color: var(--ink);
+  }
+
+  .comment {
+    margin: 0 auto;
+    width: min(420px, 100%);
+    text-align: left;
+    padding: 18px 20px;
+    background: #fff;
+    border: 1.5px solid var(--ink);
+    box-shadow: 6px 6px 0 rgba(17, 18, 18, 0.06);
+  }
+
+  .comment-name {
+    margin: 0 0 8px;
+    font-size: 12px;
+  }
+
+  .comment p:last-child {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.45;
+  }
+
+  @media (max-width: 800px) {
+    .contact {
+      padding: 104px 0 120px;
+    }
+
+    .actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .actions .cta {
+      width: 100%;
+      justify-content: flex-start;
+    }
+  }
+</style>

@@ -1,0 +1,706 @@
+---
+import { agency } from "../data/creators";
+
+const { headline, kicker, nodes, scenes, fact } = agency.howItWorks;
+---
+
+<section class="workflow" id="how-it-works">
+  <div class="workflow-pin">
+    <div class="workflow-shell">
+      <header class="workflow-head">
+        <p class="workflow-kicker">{kicker}</p>
+        <h2>
+          <span>{headline[0]}</span>
+          <span>{headline[1]}</span>
+        </h2>
+      </header>
+
+      <div class="workflow-map" data-workflow-map>
+        <div class="workflow-grid" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <span class="workflow-spine" aria-hidden="true"></span>
+        <span class="workflow-hub" aria-hidden="true"></span>
+        <div class="workflow-nodes" data-workflow-nodes>
+          {
+            nodes.map((node, index) => (
+              <span
+                class:list={["workflow-node", `is-${node.tone}`]}
+                data-node-index={index}
+              >
+                {node.label}
+              </span>
+            ))
+          }
+        </div>
+        <span class="workflow-fade is-left" aria-hidden="true"></span>
+        <span class="workflow-fade is-right" aria-hidden="true"></span>
+      </div>
+
+      <div class="workflow-body">
+        <article class="workflow-copy">
+          {
+            scenes.map((scene, index) => (
+              <div class:list={["workflow-scene", { "is-on": index === 0 }]} data-scene={index}>
+                <p class="workflow-active">
+                  <span class="workflow-radio"></span>
+                  {scene.title}
+                </p>
+                <p class="workflow-text">{scene.body}</p>
+                <p class="workflow-point">
+                  <span class="workflow-check" aria-hidden="true"></span>
+                  {scene.point}
+                </p>
+              </div>
+            ))
+          }
+        </article>
+
+        <aside class="workflow-fact">
+          <div class="workflow-fact-copy">
+            <p class="workflow-fact-title">{fact.title}</p>
+            <ul>
+              {
+                fact.legend.map((item) => (
+                  <li class:list={[`is-${item.tone}`]}>{item.label}</li>
+                ))
+              }
+            </ul>
+            <p class="workflow-source">{fact.source}</p>
+          </div>
+          <div class="workflow-chart">
+            {
+              fact.bars.map((bar) => (
+                <div class="workflow-col">
+                  <div class="workflow-bars">
+                    <div class="workflow-bar is-solid" style={`--h: ${bar.filled}%`}>
+                      <span>{bar.filled}%</span>
+                    </div>
+                    <div class="workflow-bar is-hatch" style={`--h: ${bar.outlined}%`}>
+                      <span>{bar.outlined}%</span>
+                    </div>
+                  </div>
+                  <p>{bar.label}</p>
+                </div>
+              ))
+            }
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .workflow {
+    --wf-bg: #1f1c4a;
+    --wf-card: rgba(255, 255, 255, 0.08);
+    --wf-muted: #adacc3;
+    --wf-soft: #7e7bb5;
+    --wf-progress: 0;
+    height: 240vh;
+    background: var(--wf-bg);
+    font-family: "Sora", var(--sans);
+    color: #fff;
+  }
+
+  .workflow-pin {
+    position: sticky;
+    top: 0;
+    display: flex;
+    align-items: center;
+    min-height: 100dvh;
+    padding: 136px 0 120px;
+    background: var(--wf-bg);
+  }
+
+  .workflow-shell {
+    width: calc(100% - 112px);
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  .workflow-head {
+    margin-bottom: 40px;
+  }
+
+  .workflow-kicker {
+    margin: 0 0 12px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--wf-soft);
+  }
+
+  .workflow-head h2 {
+    margin: 0;
+    font-size: clamp(28px, 3.4vw, 44px);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+  }
+
+  .workflow-head h2 span {
+    display: block;
+  }
+
+  .workflow-map {
+    --spine-x: 50%;
+    --row: 48px;
+    position: relative;
+    width: 100vw;
+    height: calc(var(--row) * 3);
+    margin: 0 0 36px calc(50% - 50vw);
+    overflow: hidden;
+    background:
+      repeating-linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.035) 0 8.333%,
+        transparent 8.333% 16.666%
+      );
+  }
+
+  .workflow-grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .workflow-grid span {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background-image: repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.16) 0 4px,
+      transparent 4px 8px
+    );
+  }
+
+  .workflow-grid span:nth-child(1) { top: var(--row); }
+  .workflow-grid span:nth-child(2) { top: calc(var(--row) * 2); }
+  .workflow-grid span:nth-child(3) { top: calc(var(--row) * 3 - 1px); }
+  .workflow-grid span:nth-child(4) { display: none; }
+
+  .workflow-spine {
+    position: absolute;
+    left: var(--spine-x);
+    top: 20px;
+    width: 1.5px;
+    height: calc(100% - 28px);
+    background: #fff;
+    z-index: 1;
+  }
+
+  .workflow-hub {
+    position: absolute;
+    left: var(--spine-x);
+    top: 12px;
+    width: 12px;
+    height: 12px;
+    border: 2px solid #fff;
+    border-radius: 999px;
+    background: var(--wf-bg);
+    transform: translateX(-5px);
+    z-index: 2;
+  }
+
+  .workflow-nodes {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    will-change: transform;
+    transform: translate3d(calc(var(--wf-progress, 0) * -32vw), 0, 0);
+    transition: transform 0.12s linear;
+    mask-image: linear-gradient(90deg, transparent 0%, #000 12%, #000 88%, transparent 100%);
+  }
+
+  .workflow-fade {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: min(180px, 16vw);
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .workflow-fade.is-left {
+    left: 0;
+    background: linear-gradient(
+      90deg,
+      var(--wf-bg) 0%,
+      rgba(31, 28, 74, 0.82) 42%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(90deg, #000 0%, #000 55%, transparent 100%);
+  }
+
+  .workflow-fade.is-right {
+    right: 0;
+    background: linear-gradient(
+      270deg,
+      var(--wf-bg) 0%,
+      rgba(31, 28, 74, 0.82) 42%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(270deg, #000 0%, #000 55%, transparent 100%);
+  }
+
+  .workflow-node {
+    position: absolute;
+    display: inline-flex;
+    align-items: center;
+    min-height: 34px;
+    padding: 0 18px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: #272666;
+    background: #e4e6f2;
+    white-space: nowrap;
+    opacity: 1;
+    transition:
+      background 0.45s ease,
+      color 0.45s ease,
+      transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .workflow-node:nth-child(1) {
+    top: 7px;
+    left: calc(var(--spine-x) + 16px);
+  }
+
+  .workflow-node:nth-child(2) {
+    top: calc(var(--row) + 7px);
+    left: calc(var(--spine-x) + 176px);
+  }
+
+  .workflow-node:nth-child(3) {
+    top: calc(var(--row) * 2 + 7px);
+    left: calc(var(--spine-x) + 348px);
+  }
+
+  .workflow-node.is-current {
+    background: #fff;
+    color: #1f1c4a;
+    transform: scale(1.04);
+  }
+
+  .workflow-node.is-passed {
+    background: #8fd4cc;
+    color: #1f1c4a;
+  }
+
+  .workflow-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    gap: 48px;
+    align-items: start;
+  }
+
+  .workflow-copy {
+    position: relative;
+    min-height: 168px;
+    overflow: hidden;
+  }
+
+  .workflow-scene {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    opacity: 0;
+    transform: translate3d(0, 36px, 0);
+    pointer-events: none;
+    z-index: 0;
+    transition:
+      opacity 0.55s ease,
+      transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .workflow-scene.is-on {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    pointer-events: auto;
+    z-index: 1;
+  }
+
+  .workflow-scene.is-leave {
+    opacity: 0;
+    transform: translate3d(0, -36px, 0);
+    z-index: 0;
+  }
+
+  .workflow-scene.is-reset {
+    transition: none;
+    opacity: 0;
+    transform: translate3d(0, 36px, 0);
+  }
+
+  .workflow-active {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 14px;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+  }
+
+  .workflow-radio {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+    border: 2px solid #fff;
+    border-radius: 999px;
+    background: transparent;
+  }
+
+  .workflow-text {
+    margin: 0 0 18px;
+    max-width: 46ch;
+    font-size: 14px;
+    line-height: 1.55;
+    letter-spacing: -0.02em;
+    color: var(--wf-muted);
+  }
+
+  .workflow-point {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0;
+    max-width: 46ch;
+    font-size: 13px;
+    line-height: 1.5;
+    letter-spacing: -0.02em;
+  }
+
+  .workflow-check {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    border: 2px solid #fff;
+    border-radius: 999px;
+    background:
+      linear-gradient(#fff, #fff) 50% 55% / 7px 2px no-repeat,
+      linear-gradient(#fff, #fff) 62% 42% / 2px 6px no-repeat;
+    transform: rotate(45deg);
+  }
+
+  .workflow-fact {
+    display: grid;
+    grid-template-columns: 0.95fr 1.05fr;
+    gap: 20px;
+    padding: 22px 22px 20px;
+    border-radius: 20px;
+    background: var(--wf-card);
+  }
+
+  .workflow-fact-title {
+    margin: 0 0 16px;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.35;
+    letter-spacing: -0.03em;
+  }
+
+  .workflow-fact ul {
+    margin: 0 0 18px;
+    padding: 0;
+    list-style: none;
+  }
+
+  .workflow-fact li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 8px;
+    font-size: 12px;
+    letter-spacing: -0.02em;
+    color: #f4f5f6;
+  }
+
+  .workflow-fact li::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #d9d9d9;
+  }
+
+  .workflow-fact li.is-hatch::before {
+    border-radius: 2px;
+    background:
+      repeating-linear-gradient(
+        -45deg,
+        transparent 0 1px,
+        #817fa2 1px 2px
+      );
+    border: 1px solid #817fa2;
+  }
+
+  .workflow-source {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .workflow-chart {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: end;
+    gap: 10px;
+    min-height: 168px;
+  }
+
+  .workflow-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .workflow-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 132px;
+  }
+
+  .workflow-bar {
+    position: relative;
+    width: 22px;
+    height: var(--h);
+    border-radius: 2px 2px 0 0;
+  }
+
+  .workflow-bar span {
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 8px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .workflow-bar.is-solid {
+    background: #fff;
+  }
+
+  .workflow-bar.is-hatch {
+    background:
+      repeating-linear-gradient(
+        -38deg,
+        transparent 0 3px,
+        rgba(255, 255, 255, 0.85) 3px 4px
+      );
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-bottom: 0;
+  }
+
+  .workflow-col p {
+    margin: 0;
+    font-size: 8px;
+    letter-spacing: -0.02em;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  @media (max-width: 980px) {
+    .workflow {
+      height: auto;
+    }
+
+    .workflow-pin {
+      position: static;
+      min-height: 0;
+      padding: 72px 0 88px;
+    }
+
+    .workflow-shell {
+      width: calc(100% - 28px);
+      max-width: none;
+    }
+
+    .workflow-head {
+      margin-bottom: 28px;
+    }
+
+    .workflow-head h2 {
+      font-size: clamp(26px, 7vw, 34px);
+    }
+
+    .workflow-map {
+      display: none;
+    }
+
+    .workflow-body {
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+
+    .workflow-fact {
+      grid-template-columns: 1fr;
+      padding: 18px 16px 16px;
+    }
+
+    .workflow-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      min-height: 0;
+    }
+
+    .workflow-scene {
+      position: static;
+      opacity: 1;
+      transform: none;
+      pointer-events: auto;
+      padding: 0 0 28px;
+      margin: 0 0 28px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .workflow-scene:last-child {
+      padding-bottom: 0;
+      margin-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .workflow-scene.is-leave,
+    .workflow-scene.is-reset {
+      opacity: 1;
+      transform: none;
+    }
+
+    .workflow-text,
+    .workflow-point {
+      max-width: none;
+    }
+
+    .workflow-chart {
+      min-height: 140px;
+    }
+
+    .workflow-bars {
+      height: 112px;
+    }
+  }
+</style>
+
+<script>
+  const section = document.getElementById("how-it-works");
+  const pills = [...(section?.querySelectorAll("[data-node-index]") ?? [])];
+  const scenes = [...(section?.querySelectorAll("[data-scene]") ?? [])];
+
+  const desktopQuery = window.matchMedia("(min-width: 981px)");
+
+  function bindDesktopWorkflow() {
+    if (!section || !desktopQuery.matches || section.dataset.workflowDesktop) return;
+    section.dataset.workflowDesktop = "1";
+    const spine = section.querySelector(".workflow-spine");
+    let current = 0;
+    let shown = 0;
+    let ticking = false;
+
+    function setScene(next) {
+      if (next === shown) return;
+
+      const outgoing = scenes[shown];
+      const incoming = scenes[next];
+      shown = next;
+
+      outgoing?.classList.remove("is-on", "is-reset");
+      outgoing?.classList.add("is-leave");
+
+      incoming?.classList.add("is-reset");
+      incoming?.classList.remove("is-leave", "is-on");
+      incoming?.offsetHeight;
+      incoming?.classList.remove("is-reset");
+      incoming?.classList.add("is-on");
+
+      window.setTimeout(() => {
+        if (outgoing && !outgoing.classList.contains("is-on")) {
+          outgoing.classList.add("is-reset");
+          outgoing.classList.remove("is-leave");
+          outgoing.offsetHeight;
+          outgoing.classList.remove("is-reset");
+        }
+      }, 560);
+    }
+
+    function readProgress() {
+      const rect = section.getBoundingClientRect();
+      const travel = section.offsetHeight - window.innerHeight;
+      const raw = travel > 0 ? -rect.top / travel : 0;
+      return Math.min(1, Math.max(0, raw));
+    }
+
+    function tick() {
+      ticking = true;
+      const target = readProgress();
+      current += (target - current) * 0.12;
+      if (Math.abs(target - current) < 0.001) current = target;
+
+      section.style.setProperty("--wf-progress", `${current}`);
+
+      const spineX = spine?.getBoundingClientRect().left ?? 0;
+      let index = 0;
+
+      pills.forEach((pill, i) => {
+        const box = pill.getBoundingClientRect();
+        const passed = box.right < spineX;
+        const crossing = box.left <= spineX && box.right >= spineX;
+
+        pill.classList.toggle("is-passed", passed);
+        pill.classList.toggle("is-current", crossing);
+
+        if (passed || crossing) index = i;
+      });
+
+      if (!pills.some((pill) => pill.classList.contains("is-current"))) {
+        pills[index]?.classList.add("is-current");
+        pills[index]?.classList.remove("is-passed");
+      }
+
+      setScene(index);
+
+      if (Math.abs(target - current) > 0.001) {
+        requestAnimationFrame(tick);
+      } else {
+        ticking = false;
+      }
+    }
+
+    function onScroll() {
+      if (!ticking) requestAnimationFrame(tick);
+    }
+
+    tick();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+  }
+
+  bindDesktopWorkflow();
+
+  desktopQuery.addEventListener("change", () => {
+    if (!section || desktopQuery.matches) return;
+    section.style.removeProperty("--wf-progress");
+    pills.forEach((pill) => {
+      pill.classList.remove("is-current", "is-passed");
+    });
+    scenes.forEach((scene) => {
+      scene.classList.remove("is-leave", "is-reset", "is-on");
+    });
+  });
+</script>

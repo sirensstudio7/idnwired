@@ -1,0 +1,342 @@
+---
+import { agency } from "../data/creators";
+
+const { eyebrow, headline, button, href } = agency.cta;
+const [headlineOne, headlineTwo] = headline;
+const { copyright, menuGroups } = agency.footer;
+const year = new Date().getFullYear();
+const copyrightText = copyright.replace("{year}", String(year));
+---
+
+<footer class="site-footer" id="cta" aria-labelledby="cta-heading">
+  <div class="site-footer-media" data-caustics-root aria-hidden="true">
+    <canvas class="site-footer-caustics"></canvas>
+    <p class="site-footer-caustics-fail" data-caustics-fail hidden>
+      This piece needs WebGL2 with float render targets.
+    </p>
+  </div>
+
+  <div class="wrap site-footer-shell">
+    <div class="site-footer-hero">
+      <p class="site-footer-eyebrow">
+        <span class="site-footer-eyebrow-dot" aria-hidden="true"></span>
+        {eyebrow}
+      </p>
+      <h2 id="cta-heading">
+        <span>{headlineOne}</span>
+        <span>{headlineTwo}</span>
+      </h2>
+      <a class="site-footer-cta-btn" href={href}>{button}</a>
+    </div>
+
+    <div class="site-footer-card">
+      <div class="site-footer-card-head">
+        <a class="site-footer-logo" href="/" aria-label={`${agency.name} home`}>
+          {agency.name}
+        </a>
+        <div class="site-footer-card-about">
+          <p class="site-footer-copy">{copyrightText}</p>
+        </div>
+      </div>
+
+      <div class="site-footer-menus">
+        {
+          menuGroups.map((group) => (
+            <div class="site-footer-menu">
+              <p class="site-footer-menu-title">{group.title}</p>
+              <ul>
+                {group.links.map((link) => (
+                  <li>
+                    <a
+                      href={link.href}
+                      target={link.href.startsWith("http") ? "_blank" : undefined}
+                      rel={link.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                    >
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  import { initFooterCaustics } from "../scripts/footer-caustics";
+
+  function bootFooterCaustics() {
+    document.querySelectorAll<HTMLElement>("[data-caustics-root]").forEach((root) => {
+      initFooterCaustics(root);
+    });
+  }
+
+  bootFooterCaustics();
+  document.addEventListener("astro:page-load", bootFooterCaustics);
+</script>
+
+<style>
+  .site-footer {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    box-sizing: border-box;
+    overflow: hidden;
+    font-family: "Sora", var(--sans);
+    color: #fff;
+  }
+
+  .site-footer-media {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+
+  .site-footer-media::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.12) 0%,
+      rgba(0, 0, 0, 0.28) 55%,
+      rgba(0, 0, 0, 0.45) 100%
+    );
+  }
+
+  .site-footer-caustics {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+    cursor: crosshair;
+    background: #05070a;
+  }
+
+  .site-footer-caustics-fail {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    margin: 0;
+    padding: 24px;
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #cdd8e0;
+    background: radial-gradient(120% 120% at 50% 30%, #0d1620, #05070a);
+  }
+
+  .site-footer-caustics-fail[hidden] {
+    display: none;
+  }
+
+  .site-footer-shell {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    height: 100%;
+    min-height: 0;
+    box-sizing: border-box;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: clamp(24px, 4vw, 48px);
+    padding: clamp(72px, 10vw, 120px) 0 clamp(28px, 4vw, 40px);
+    pointer-events: none;
+  }
+
+  .site-footer-shell :global(a),
+  .site-footer-shell :global(button) {
+    pointer-events: auto;
+  }
+
+  .site-footer-hero {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(20px, 3vw, 28px);
+    width: min(100%, 52rem);
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .site-footer-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: #fff;
+  }
+
+  .site-footer-eyebrow-dot {
+    flex-shrink: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: linear-gradient(140deg, #7ed7cc 0%, #83cdc4 45%, #ffdc39 100%);
+  }
+
+  .site-footer-hero h2 {
+    margin: 0;
+    font-size: clamp(24px, 3vw, 38px);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+  }
+
+  .site-footer-hero h2 span {
+    display: block;
+  }
+
+  @media (min-width: 720px) {
+    .site-footer-hero h2 span {
+      white-space: nowrap;
+    }
+  }
+
+  .site-footer-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 52px;
+    padding: 0 32px;
+    border-radius: 999px;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    color: #fff;
+    background: #000;
+    box-shadow:
+      rgba(0, 0, 0, 0.1) 0 1px 2px,
+      rgba(0, 0, 0, 0.08) 0 5px 4px;
+  }
+
+  .site-footer-cta-btn:hover {
+    background: #141414;
+  }
+
+  .site-footer-card {
+    display: flex;
+    flex: 0 1 auto;
+    min-height: 0;
+    max-height: min(52vh, 520px);
+    flex-direction: column;
+    gap: clamp(32px, 5vw, 48px);
+    padding: clamp(28px, 4vw, 40px);
+    border-radius: 16px;
+    background: #000;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .site-footer-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 32px;
+  }
+
+  .site-footer-card-about {
+    margin-left: auto;
+    max-width: 28rem;
+    text-align: right;
+  }
+
+  .site-footer-copy {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .site-footer-logo {
+    flex-shrink: 0;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: #fff;
+  }
+
+  .site-footer-menus {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 24px 32px;
+  }
+
+  .site-footer-menu-title {
+    margin: 0 0 16px;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: #fff;
+  }
+
+  .site-footer-menu ul {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .site-footer-menu a {
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .site-footer-menu a:hover {
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  @media (max-width: 900px) {
+    .site-footer-menus {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .site-footer-card-head {
+      flex-direction: column;
+    }
+
+    .site-footer-card-about {
+      margin-left: 0;
+      max-width: none;
+      text-align: left;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .site-footer-menus {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .site-footer-caustics {
+      display: none;
+    }
+
+    .site-footer {
+      background: #05070a;
+    }
+  }
+</style>
