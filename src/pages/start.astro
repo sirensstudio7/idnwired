@@ -1,0 +1,1448 @@
+---
+export const prerender = true;
+
+import Header from "../components/Header.astro";
+import MenuOverlay from "../components/MenuOverlay.astro";
+import { getRegencies } from "idn-area-data";
+import {
+  simplifyKotaLabel,
+  TARGET_CITY_PLACEHOLDER,
+  type TargetCityOption,
+} from "../lib/inquiries/target-cities";
+import {
+  COMPANY_SECTOR_PLACEHOLDER,
+  COMPANY_SECTORS,
+} from "../lib/inquiries/schema";
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const regencies = await getRegencies({
+  transform: { headers: { province_code: "provinceCode" } },
+});
+
+const cityNames = new Set<string>();
+for (const r of regencies) {
+  if (!r.name.startsWith("KOTA ")) continue;
+  cityNames.add(simplifyKotaLabel(r.name));
+}
+
+const regencyOptions: TargetCityOption[] = [...cityNames]
+  .sort((a, b) => a.localeCompare(b, "en"))
+  .map((city) => ({
+    value: city,
+    label: city,
+    searchText: city.toLowerCase(),
+  }));
+
+const TARGET_CITY_OPTIONS: TargetCityOption[] = [
+  {
+    value: "National (Indonesia-wide)",
+    label: "National (Indonesia-wide)",
+    searchText: "national indonesia seluruh",
+  },
+  ...regencyOptions,
+];
+
+const steps = [
+  "We review your brief and map outlets, creators, and regions that fit.",
+  "Our editorial team suggests angles and timing before anything goes live.",
+  "You receive a clear plan and next steps — usually within two business days.",
+];
+---
+
+<BaseLayout
+  title="Start your project — IDNWIRED"
+  description="Tell us about your campaign. Indonesia News Wire distributes press releases across online media, creators, print and TV — targeted by niche, city, and audience."
+  bodyClass="page-start"
+>
+  <MenuOverlay />
+  <Header />
+
+  <main class="start-page">
+    <div class="start-shell">
+      <header class="start-head">
+        <p class="start-kicker">Campaign brief</p>
+        <h1>Start your project</h1>
+        <p class="start-lede">
+          Share your announcement, goals, and audience. We will shape the angle and recommend the
+          mix of media, creators, and markets that fit your campaign.
+        </p>
+      </header>
+
+      <div class="start-layout">
+        <aside class="start-aside" aria-labelledby="start-aside-heading">
+          <h2 id="start-aside-heading" class="start-aside-title">What happens next</h2>
+          <ol class="start-steps">
+            {steps.map((step) => <li>{step}</li>)}
+          </ol>
+          <p class="start-aside-note">
+            Prefer email? Write us at
+            <a href="mailto:hello@idnwired.com">hello@idnwired.com</a>.
+          </p>
+        </aside>
+
+        <div class="start-main">
+          <div class="start-panel" id="start-form-panel">
+          <form class="start-form" id="start-form" novalidate>
+            <fieldset class="start-fieldset">
+              <legend>Company details</legend>
+              <div class="start-form__row start-form__row--2">
+                <label class="start-field">
+                  <span>Company / brand</span>
+                  <input type="text" name="company_name" required autocomplete="organization" />
+                </label>
+                <div class="start-field">
+                  <span id="start-sector-label">Company sector</span>
+                  <div
+                    class="start-custom-select start-custom-select--sector"
+                    data-start-sector-select
+                    role="group"
+                    aria-labelledby="start-sector-label"
+                  >
+                    <input type="hidden" name="company_sector" value="" required data-sector-input />
+                    <button
+                      type="button"
+                      class="start-custom-select__trigger"
+                      aria-haspopup="listbox"
+                      aria-expanded="false"
+                    >
+                      <span class="start-custom-select__value is-placeholder" data-sector-label>
+                        {COMPANY_SECTOR_PLACEHOLDER}
+                      </span>
+                      <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <path
+                          d="M6 8l4 4 4-4"
+                          stroke="currentColor"
+                          stroke-width="1.75"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"></path>
+                      </svg>
+                    </button>
+                    <ul
+                      class="start-custom-select__menu start-custom-select__menu--sector"
+                      role="listbox"
+                      aria-label="Company sector"
+                      hidden
+                    >
+                      {
+                        COMPANY_SECTORS.map((sector) => (
+                          <li role="presentation">
+                            <button
+                              type="button"
+                              class="start-custom-select__option start-custom-select__option--sector"
+                              role="option"
+                              data-value={sector.value}
+                              aria-selected="false"
+                            >
+                              {sector.label}
+                            </button>
+                          </li>
+                        ))
+                      }
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <label class="start-field start-field--full">
+                <span>Your name</span>
+                <input type="text" name="contact_name" required autocomplete="name" />
+              </label>
+
+              <div class="start-form__row start-form__row--2">
+                <label class="start-field">
+                  <span>Work email</span>
+                  <input type="email" name="email" required autocomplete="email" />
+                </label>
+                <label class="start-field">
+                  <span>Phone <em>(optional)</em></span>
+                  <input type="tel" name="phone" autocomplete="tel" />
+                </label>
+              </div>
+
+              <label class="start-field start-field--full">
+                <span>Website <em>(optional)</em></span>
+                <input type="url" name="website" placeholder="https://" autocomplete="url" />
+              </label>
+            </fieldset>
+
+            <fieldset class="start-fieldset">
+              <legend>Campaign</legend>
+              <div class="start-form__row start-form__row--2">
+                <div class="start-field">
+                  <span id="start-city-label">City</span>
+                  <div
+                    class="start-custom-select start-custom-select--city"
+                    data-start-city-select
+                    role="group"
+                    aria-labelledby="start-city-label"
+                  >
+                    <input type="hidden" name="target_cities" value="" data-city-input />
+                    <button
+                      type="button"
+                      class="start-custom-select__trigger"
+                      aria-haspopup="listbox"
+                      aria-expanded="false"
+                    >
+                      <span class="start-custom-select__value is-placeholder" data-city-label>
+                        {TARGET_CITY_PLACEHOLDER}
+                      </span>
+                      <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <path
+                          d="M6 8l4 4 4-4"
+                          stroke="currentColor"
+                          stroke-width="1.75"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"></path>
+                      </svg>
+                    </button>
+                    <ul
+                      class="start-custom-select__menu start-custom-select__menu--city"
+                      role="listbox"
+                      aria-label="City"
+                      hidden
+                    >
+                      <li class="start-custom-select__search-wrap" role="presentation">
+                        <label class="start-sr-only" for="start-city-search">Search city</label>
+                        <input
+                          type="search"
+                          id="start-city-search"
+                          class="start-custom-select__search"
+                          placeholder="Search city…"
+                          data-city-search
+                          autocomplete="off"
+                        />
+                      </li>
+                      {
+                        TARGET_CITY_OPTIONS.map((opt) => (
+                          <li role="presentation" data-city-item data-search={opt.searchText}>
+                            <button
+                              type="button"
+                              class="start-custom-select__option start-custom-select__option--compact"
+                              role="option"
+                              data-value={opt.value}
+                              aria-selected="false"
+                            >
+                              {opt.label}
+                            </button>
+                          </li>
+                        ))
+                      }
+                    </ul>
+                  </div>
+                </div>
+                <label class="start-field">
+                  <span>Niche & audience</span>
+                  <input
+                    type="text"
+                    name="target_niche"
+                    placeholder="e.g. fintech, Gen Z lifestyle"
+                  />
+                </label>
+              </div>
+
+              <div class="start-form__row start-form__row--2">
+                <div class="start-field">
+                  <span id="start-launch-label">Launch date <em>(optional)</em></span>
+                  <div
+                    class="start-date-picker"
+                    data-start-date-picker
+                    role="group"
+                    aria-labelledby="start-launch-label"
+                  >
+                    <input type="hidden" name="launch_date" value="" data-date-input />
+                    <button
+                      type="button"
+                      class="start-date-picker__trigger"
+                      aria-haspopup="dialog"
+                      aria-expanded="false"
+                    >
+                      <span class="start-date-picker__value is-placeholder" data-date-label>
+                        Select date
+                      </span>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path
+                          d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
+                          stroke="currentColor"
+                          stroke-width="1.5"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"></path>
+                      </svg>
+                    </button>
+                    <div class="start-date-picker__popover" role="dialog" aria-label="Choose launch date" hidden>
+                      <div class="start-date-picker__head">
+                        <button type="button" class="start-date-picker__nav" data-date-prev aria-label="Previous month">
+                          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                            <path
+                              d="M12 6l-4 4 4 4"
+                              stroke="currentColor"
+                              stroke-width="1.75"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"></path>
+                          </svg>
+                        </button>
+                        <p class="start-date-picker__month" data-date-month-label></p>
+                        <button type="button" class="start-date-picker__nav" data-date-next aria-label="Next month">
+                          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                            <path
+                              d="M8 6l4 4-4 4"
+                              stroke="currentColor"
+                              stroke-width="1.75"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"></path>
+                          </svg>
+                        </button>
+                      </div>
+                      <div class="start-date-picker__weekdays" aria-hidden="true">
+                        <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+                      </div>
+                      <div class="start-date-picker__grid" data-date-grid></div>
+                      <button type="button" class="start-date-picker__clear" data-date-clear>
+                        Clear date
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <label class="start-field">
+                  <span>Budget (USD) <em>(optional)</em></span>
+                  <span class="start-input-prefix">
+                    <span class="start-input-prefix__symbol" aria-hidden="true">$</span>
+                    <input
+                      type="text"
+                      name="budget_band"
+                      class="start-input-prefix__input"
+                      placeholder="10000"
+                      autocomplete="off"
+                      inputmode="numeric"
+                      pattern="[0-9]*"
+                      maxlength="15"
+                      data-budget-digits
+                    />
+                  </span>
+                </label>
+              </div>
+
+              <label class="start-field start-field--full">
+                <span>Project details</span>
+                <textarea
+                  name="project_details"
+                  rows="6"
+                  required
+                  minlength="20"
+                  placeholder="What are you announcing? Key messages, assets you have, and what success looks like."
+                ></textarea>
+              </label>
+            </fieldset>
+
+            <label class="start-hp" aria-hidden="true">
+              <span>Leave blank</span>
+              <input type="text" name="_hp" tabindex="-1" autocomplete="off" />
+            </label>
+
+            <p class="start-consent">
+              By submitting, you agree we may contact you about this brief. We do not share your
+              details with third parties for marketing.
+            </p>
+
+            <p class="start-error" id="start-error" hidden></p>
+
+            <button type="submit" class="start-submit">Submit brief</button>
+          </form>
+          </div>
+
+          <div class="start-success" id="start-success" hidden>
+            <h2>Thank you — we received your brief.</h2>
+            <p>Our team will review it and get back to you at the email you provided.</p>
+            <a class="start-back" href="/">Back to home</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</BaseLayout>
+
+<script>
+  const form = document.getElementById("start-form") as HTMLFormElement | null;
+  const panel = document.getElementById("start-form-panel");
+  const success = document.getElementById("start-success");
+  const errorEl = document.getElementById("start-error") as HTMLParagraphElement | null;
+
+  const defaultCityLabel = "Select city";
+  const defaultDateLabel = "Select date";
+  const defaultSectorLabel = "Select sector";
+
+  function isoFromParts(year: number, month: number, day: number) {
+    return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  }
+
+  function parseIsoDate(iso: string) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+    if (!match) return null;
+    return {
+      year: Number(match[1]),
+      month: Number(match[2]),
+      day: Number(match[3]),
+    };
+  }
+
+  function formatDateLabel(iso: string) {
+    const parts = parseIsoDate(iso);
+    if (!parts) return defaultDateLabel;
+    return new Intl.DateTimeFormat("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }).format(new Date(parts.year, parts.month - 1, parts.day));
+  }
+
+  function setDatePicker(iso: string) {
+    const root = document.querySelector("[data-start-date-picker]");
+    const hidden = root?.querySelector("[data-date-input]") as HTMLInputElement | null;
+    const labelEl = root?.querySelector("[data-date-label]") as HTMLElement | null;
+    if (hidden) hidden.value = iso;
+    if (labelEl) {
+      labelEl.textContent = iso ? formatDateLabel(iso) : defaultDateLabel;
+      labelEl.classList.toggle("is-placeholder", !iso);
+    }
+    root?.dispatchEvent(new CustomEvent("start-date-change", { detail: { iso } }));
+  }
+
+  function initStartDatePicker() {
+    const root = document.querySelector("[data-start-date-picker]");
+    if (!root || root.getAttribute("data-bound") === "1") return;
+    root.setAttribute("data-bound", "1");
+
+    const trigger = root.querySelector(".start-date-picker__trigger") as HTMLButtonElement | null;
+    const popover = root.querySelector(".start-date-picker__popover") as HTMLElement | null;
+    const grid = root.querySelector("[data-date-grid]") as HTMLElement | null;
+    const monthLabel = root.querySelector("[data-date-month-label]") as HTMLElement | null;
+    const prevBtn = root.querySelector("[data-date-prev]") as HTMLButtonElement | null;
+    const nextBtn = root.querySelector("[data-date-next]") as HTMLButtonElement | null;
+    const clearBtn = root.querySelector("[data-date-clear]") as HTMLButtonElement | null;
+    const hidden = root.querySelector("[data-date-input]") as HTMLInputElement | null;
+
+    const today = new Date();
+    const todayIso = isoFromParts(today.getFullYear(), today.getMonth() + 1, today.getDate());
+
+    let viewYear = today.getFullYear();
+    let viewMonth = today.getMonth();
+
+    const close = () => {
+      if (popover) popover.hidden = true;
+      trigger?.setAttribute("aria-expanded", "false");
+    };
+
+    function renderCalendar() {
+      if (!grid || !monthLabel) return;
+
+      monthLabel.textContent = new Intl.DateTimeFormat("en-GB", {
+        month: "long",
+        year: "numeric",
+      }).format(new Date(viewYear, viewMonth, 1));
+
+      grid.innerHTML = "";
+      const selectedIso = hidden?.value ?? "";
+      const firstDay = new Date(viewYear, viewMonth, 1);
+      const startOffset = (firstDay.getDay() + 6) % 7;
+      const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+      for (let i = 0; i < startOffset; i += 1) {
+        const pad = document.createElement("span");
+        pad.className = "start-date-picker__pad";
+        pad.setAttribute("aria-hidden", "true");
+        grid.appendChild(pad);
+      }
+
+      for (let day = 1; day <= daysInMonth; day += 1) {
+        const iso = isoFromParts(viewYear, viewMonth + 1, day);
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "start-date-picker__day";
+        btn.textContent = String(day);
+        btn.dataset.date = iso;
+        if (iso === selectedIso) btn.classList.add("is-selected");
+        if (iso === todayIso) btn.classList.add("is-today");
+        btn.addEventListener("click", () => {
+          setDatePicker(iso);
+          close();
+        });
+        grid.appendChild(btn);
+      }
+    }
+
+    const open = () => {
+      const selected = hidden?.value ?? "";
+      const parts = parseIsoDate(selected);
+      if (parts) {
+        viewYear = parts.year;
+        viewMonth = parts.month - 1;
+      } else {
+        viewYear = today.getFullYear();
+        viewMonth = today.getMonth();
+      }
+      renderCalendar();
+      if (popover) popover.hidden = false;
+      trigger?.setAttribute("aria-expanded", "true");
+    };
+
+    root.addEventListener("start-date-change", () => {
+      if (!popover?.hidden) renderCalendar();
+    });
+
+    trigger?.addEventListener("click", () => {
+      if (popover?.hidden) open();
+      else close();
+    });
+
+    prevBtn?.addEventListener("click", () => {
+      viewMonth -= 1;
+      if (viewMonth < 0) {
+        viewMonth = 11;
+        viewYear -= 1;
+      }
+      renderCalendar();
+    });
+
+    nextBtn?.addEventListener("click", () => {
+      viewMonth += 1;
+      if (viewMonth > 11) {
+        viewMonth = 0;
+        viewYear += 1;
+      }
+      renderCalendar();
+    });
+
+    clearBtn?.addEventListener("click", () => {
+      setDatePicker("");
+      close();
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!root.contains(event.target as Node)) close();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") close();
+    });
+  }
+
+  function setCitySelect(value: string, label: string) {
+    const root = document.querySelector("[data-start-city-select]");
+    const hidden = root?.querySelector("[data-city-input]") as HTMLInputElement | null;
+    const labelEl = root?.querySelector("[data-city-label]") as HTMLElement | null;
+    const options = root?.querySelectorAll(".start-custom-select__option");
+    if (hidden) hidden.value = value;
+    if (labelEl) {
+      labelEl.textContent = label;
+      labelEl.classList.toggle("is-placeholder", !value);
+    }
+    options?.forEach((opt) => {
+      opt.setAttribute("aria-selected", opt.getAttribute("data-value") === value ? "true" : "false");
+    });
+  }
+
+  function setSectorSelect(value: string, label: string) {
+    const root = document.querySelector("[data-start-sector-select]");
+    const hidden = root?.querySelector("[data-sector-input]") as HTMLInputElement | null;
+    const labelEl = root?.querySelector("[data-sector-label]") as HTMLElement | null;
+    const options = root?.querySelectorAll(".start-custom-select__option");
+    if (hidden) hidden.value = value;
+    if (labelEl) {
+      labelEl.textContent = label;
+      labelEl.classList.toggle("is-placeholder", !value);
+    }
+    options?.forEach((opt) => {
+      opt.setAttribute("aria-selected", opt.getAttribute("data-value") === value ? "true" : "false");
+    });
+  }
+
+  function initStartSectorSelect() {
+    const root = document.querySelector("[data-start-sector-select]");
+    if (!root || root.getAttribute("data-bound") === "1") return;
+    root.setAttribute("data-bound", "1");
+
+    const trigger = root.querySelector(".start-custom-select__trigger") as HTMLButtonElement | null;
+    const menu = root.querySelector(".start-custom-select__menu") as HTMLUListElement | null;
+    const options = root.querySelectorAll(".start-custom-select__option");
+
+    const close = () => {
+      if (menu) menu.hidden = true;
+      trigger?.setAttribute("aria-expanded", "false");
+    };
+
+    const open = () => {
+      if (menu) menu.hidden = false;
+      trigger?.setAttribute("aria-expanded", "true");
+    };
+
+    trigger?.addEventListener("click", () => {
+      if (menu?.hidden) open();
+      else close();
+    });
+
+    options.forEach((opt) => {
+      opt.addEventListener("click", () => {
+        const value = opt.getAttribute("data-value") ?? "";
+        const text = opt.textContent?.trim() ?? defaultSectorLabel;
+        setSectorSelect(value, text);
+        close();
+      });
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!root.contains(event.target as Node)) close();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") close();
+    });
+  }
+
+  function initStartCitySelect() {
+    const root = document.querySelector("[data-start-city-select]");
+    if (!root || root.getAttribute("data-bound") === "1") return;
+    root.setAttribute("data-bound", "1");
+
+    const trigger = root.querySelector(".start-custom-select__trigger") as HTMLButtonElement | null;
+    const menu = root.querySelector(".start-custom-select__menu") as HTMLUListElement | null;
+    const search = root.querySelector("[data-city-search]") as HTMLInputElement | null;
+    const options = root.querySelectorAll(".start-custom-select__option");
+    const items = root.querySelectorAll("[data-city-item]");
+
+    const filterCities = () => {
+      const q = (search?.value ?? "").trim().toLowerCase();
+      items.forEach((item) => {
+        const haystack = item.getAttribute("data-search") ?? "";
+        (item as HTMLElement).hidden = Boolean(q && !haystack.includes(q));
+      });
+    };
+
+    const close = () => {
+      if (menu) menu.hidden = true;
+      trigger?.setAttribute("aria-expanded", "false");
+      if (search) {
+        search.value = "";
+        filterCities();
+      }
+    };
+
+    const open = () => {
+      if (menu) menu.hidden = false;
+      trigger?.setAttribute("aria-expanded", "true");
+      search?.focus();
+    };
+
+    trigger?.addEventListener("click", () => {
+      if (menu?.hidden) open();
+      else close();
+    });
+
+    search?.addEventListener("input", filterCities);
+    search?.addEventListener("click", (event) => event.stopPropagation());
+
+    options.forEach((opt) => {
+      opt.addEventListener("click", () => {
+        const value = opt.getAttribute("data-value") ?? "";
+        const text = opt.textContent?.trim() ?? defaultCityLabel;
+        setCitySelect(value, text);
+        close();
+      });
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!root.contains(event.target as Node)) close();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") close();
+    });
+  }
+
+  function initBudgetDigitsInput() {
+    const input = form?.querySelector("[data-budget-digits]") as HTMLInputElement | null;
+    if (!input || input.getAttribute("data-bound") === "1") return;
+    input.setAttribute("data-bound", "1");
+
+    const sanitize = () => {
+      const digits = input.value.replace(/\D/g, "").slice(0, 15);
+      if (input.value !== digits) input.value = digits;
+    };
+
+    input.addEventListener("input", sanitize);
+    input.addEventListener("paste", () => {
+      requestAnimationFrame(sanitize);
+    });
+  }
+
+  initStartCitySelect();
+  initStartSectorSelect();
+  initStartDatePicker();
+  initBudgetDigitsInput();
+
+  form?.addEventListener("reset", () => {
+    setCitySelect("", defaultCityLabel);
+    setSectorSelect("", defaultSectorLabel);
+    setDatePicker("");
+  });
+
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errorEl?.setAttribute("hidden", "");
+
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+
+    const fd = new FormData(form);
+    const payload: Record<string, string> = { source: "footer_cta" };
+    fd.forEach((value, key) => {
+      if (typeof value === "string") payload[key] = value;
+    });
+
+    const btn = form.querySelector(".start-submit") as HTMLButtonElement;
+    btn.disabled = true;
+
+    try {
+      const res = await fetch("/api/inquiries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+
+      if (res.ok) {
+        panel?.setAttribute("hidden", "");
+        success?.removeAttribute("hidden");
+        form.reset();
+        success?.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+
+      if (errorEl) {
+        errorEl.textContent = data.error ?? "Something went wrong. Please try again.";
+        errorEl.removeAttribute("hidden");
+      }
+    } catch {
+      if (errorEl) {
+        errorEl.textContent = "Network error. Check your connection and try again.";
+        errorEl.removeAttribute("hidden");
+      }
+    } finally {
+      btn.disabled = false;
+    }
+  });
+</script>
+
+<style>
+  .start-page {
+    --start-ink: #111212;
+    --start-muted: #6b6e6e;
+    --start-line: #d7dce6;
+    --start-placeholder: #8a8799;
+    scroll-margin-top: 88px;
+    padding: 120px 0 160px;
+    font-family: "Sora", var(--sans);
+    color: var(--start-ink);
+    background: #fff;
+  }
+
+  .start-shell {
+    width: calc(100% - 112px);
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  .start-head {
+    max-width: 640px;
+    margin-bottom: 56px;
+  }
+
+  .start-kicker {
+    margin: 0 0 12px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--start-muted);
+  }
+
+  .start-head h1 {
+    margin: 0 0 16px;
+    font-size: clamp(28px, 3.2vw, 40px);
+    font-weight: 500;
+    line-height: 1.12;
+    letter-spacing: -0.04em;
+  }
+
+  .start-lede {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.55;
+    letter-spacing: -0.02em;
+    color: var(--start-muted);
+  }
+
+  .start-layout {
+    display: grid;
+    grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+    gap: 48px 64px;
+    align-items: start;
+  }
+
+  .start-aside-title {
+    margin: 0 0 20px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .start-steps {
+    margin: 0 0 28px;
+    padding: 0 0 0 1.15rem;
+    font-size: 14px;
+    line-height: 1.55;
+    letter-spacing: -0.02em;
+    color: var(--start-muted);
+  }
+
+  .start-steps li + li {
+    margin-top: 14px;
+  }
+
+  .start-aside-note {
+    margin: 0;
+    padding-top: 24px;
+    border-top: 1px solid var(--start-line);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--start-muted);
+  }
+
+  .start-aside-note a {
+    color: var(--start-ink);
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .start-panel,
+  .start-success {
+    padding: 36px 32px 40px;
+    border: 1px solid var(--start-line);
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 12px 40px rgba(39, 38, 102, 0.06);
+  }
+
+  .start-main {
+    min-width: 0;
+  }
+
+  .start-fieldset {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 16px;
+    row-gap: 16px;
+    align-items: end;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+
+  .start-fieldset + .start-fieldset {
+    margin-top: 32px;
+  }
+
+  .start-fieldset legend {
+    grid-column: 1 / -1;
+    padding: 0;
+    margin: 0 0 14px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--start-muted);
+  }
+
+  .start-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* Let paired fields share one 2-column grid (aligned tracks). */
+  .start-form__row--2 {
+    display: contents;
+  }
+
+  .start-field {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    align-content: start;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .start-field--full {
+    grid-column: 1 / -1;
+  }
+
+  .start-field span {
+    min-height: 1.25em;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    color: var(--start-ink);
+  }
+
+  .start-field em {
+    font-style: normal;
+    font-weight: 400;
+    color: var(--start-muted);
+  }
+
+  .start-input-prefix {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    min-height: 47px;
+    padding: 0 16px;
+    box-sizing: border-box;
+    border: 1px solid rgba(39, 38, 102, 0.14);
+    border-radius: 10px;
+    background: #fff;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  .start-input-prefix:hover {
+    border-color: rgba(39, 38, 102, 0.22);
+  }
+
+  .start-input-prefix:focus-within {
+    border-color: rgba(39, 38, 102, 0.35);
+    box-shadow: 0 0 0 3px rgba(126, 123, 181, 0.2);
+  }
+
+  .start-input-prefix__symbol {
+    flex-shrink: 0;
+    font-family: "Sora", var(--sans);
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--start-muted);
+    pointer-events: none;
+  }
+
+  .start-field .start-input-prefix__input {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    padding: 12px 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    line-height: 1.25;
+    box-shadow: none;
+  }
+
+  .start-field .start-input-prefix__input:hover,
+  .start-field .start-input-prefix__input:focus-visible {
+    border-color: transparent;
+    box-shadow: none;
+  }
+
+  .start-field input,
+  .start-field textarea {
+    width: 100%;
+    margin: 0;
+    padding: 12px 16px;
+    border: 1px solid rgba(39, 38, 102, 0.14);
+    border-radius: 10px;
+    background: #fff;
+    font-family: "Sora", var(--sans);
+    font-size: 15px;
+    letter-spacing: -0.02em;
+    color: var(--start-ink);
+    outline: none;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  .start-field input::placeholder,
+  .start-field textarea::placeholder {
+    color: var(--start-placeholder);
+  }
+
+  .start-field input:hover,
+  .start-field textarea:hover {
+    border-color: rgba(39, 38, 102, 0.22);
+  }
+
+  .start-field input:focus-visible,
+  .start-field textarea:focus-visible {
+    border-color: rgba(39, 38, 102, 0.35);
+    box-shadow: 0 0 0 3px rgba(126, 123, 181, 0.2);
+  }
+
+  .start-field textarea {
+    resize: vertical;
+    min-height: 148px;
+  }
+
+  .start-date-picker {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .start-date-picker__trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    min-height: 47px;
+    margin: 0;
+    padding: 12px 16px;
+    border: 1px solid rgba(39, 38, 102, 0.14);
+    border-radius: 10px;
+    font-family: "Sora", var(--sans);
+    font-size: 15px;
+    letter-spacing: -0.02em;
+    text-align: left;
+    color: var(--start-ink);
+    background: #fff;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  .start-date-picker__value.is-placeholder {
+    color: var(--start-placeholder);
+    font-weight: 400;
+  }
+
+  .start-date-picker__trigger svg {
+    flex-shrink: 0;
+    color: var(--start-muted);
+  }
+
+  .start-date-picker__trigger:hover {
+    border-color: rgba(39, 38, 102, 0.22);
+  }
+
+  .start-date-picker__trigger:focus-visible {
+    outline: none;
+    border-color: rgba(39, 38, 102, 0.35);
+    box-shadow: 0 0 0 3px rgba(126, 123, 181, 0.2);
+  }
+
+  .start-date-picker__popover {
+    position: absolute;
+    z-index: 40;
+    top: calc(100% + 6px);
+    left: 0;
+    width: min(100%, 300px);
+    padding: 12px;
+    border: 1px solid rgba(39, 38, 102, 0.14);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 16px 40px rgba(39, 38, 102, 0.14);
+  }
+
+  .start-date-picker__popover[hidden] {
+    display: none;
+  }
+
+  .start-date-picker__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .start-date-picker__month {
+    margin: 0;
+    flex: 1;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    text-align: center;
+    color: var(--start-ink);
+  }
+
+  .start-date-picker__nav {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid rgba(39, 38, 102, 0.12);
+    border-radius: 8px;
+    color: var(--start-muted);
+    background: #fff;
+    cursor: pointer;
+  }
+
+  .start-date-picker__nav:hover {
+    color: var(--start-ink);
+    border-color: rgba(39, 38, 102, 0.22);
+  }
+
+  .start-date-picker__weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--start-muted);
+    text-align: center;
+  }
+
+  .start-date-picker__grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+  }
+
+  .start-date-picker__pad {
+    display: block;
+    aspect-ratio: 1;
+  }
+
+  .start-date-picker__day {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 1;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    font-family: "Sora", var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--start-ink);
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .start-date-picker__day:hover {
+    background: rgba(39, 38, 102, 0.06);
+  }
+
+  .start-date-picker__day.is-today {
+    box-shadow: inset 0 0 0 1px rgba(39, 38, 102, 0.25);
+  }
+
+  .start-date-picker__day.is-selected {
+    color: #fff;
+    background: #282560;
+    box-shadow: none;
+  }
+
+  .start-date-picker__clear {
+    width: 100%;
+    margin-top: 10px;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 8px;
+    font-family: "Sora", var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--start-muted);
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .start-date-picker__clear:hover {
+    color: var(--start-ink);
+    background: rgba(39, 38, 102, 0.04);
+  }
+
+  .start-custom-select {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .start-custom-select__trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    min-height: 47px;
+    margin: 0;
+    padding: 12px 16px;
+    border: 1px solid rgba(39, 38, 102, 0.14);
+    border-radius: 10px;
+    font-family: "Sora", var(--sans);
+    font-size: 15px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    text-align: left;
+    color: var(--start-ink);
+    background: #fff;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  .start-custom-select__value.is-placeholder {
+    color: var(--start-placeholder);
+    font-weight: 400;
+  }
+
+  .start-custom-select__trigger svg {
+    flex-shrink: 0;
+    color: var(--start-muted);
+    transition: transform 0.15s ease;
+  }
+
+  .start-custom-select__trigger:hover {
+    border-color: rgba(39, 38, 102, 0.22);
+  }
+
+  .start-custom-select__trigger:focus-visible {
+    outline: none;
+    border-color: rgba(39, 38, 102, 0.35);
+    box-shadow: 0 0 0 3px rgba(126, 123, 181, 0.2);
+  }
+
+  .start-custom-select__trigger[aria-expanded="true"] svg {
+    transform: rotate(180deg);
+  }
+
+  .start-custom-select__menu {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 6px);
+    right: 0;
+    left: 0;
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    border: 1px solid rgba(39, 38, 102, 0.14);
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 12px 32px rgba(39, 38, 102, 0.12);
+  }
+
+  .start-custom-select__menu[hidden] {
+    display: none;
+  }
+
+  .start-custom-select__menu--city {
+    max-height: min(360px, 55vh);
+    overflow-y: auto;
+    padding: 6px;
+  }
+
+  .start-custom-select__menu--sector {
+    max-height: min(320px, 45vh);
+    overflow-y: auto;
+  }
+
+  .start-custom-select__option--sector {
+    padding: 9px 12px;
+    font-size: 14px;
+    line-height: 1.35;
+  }
+
+  .start-custom-select__search-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 0;
+    margin: 0 0 6px;
+    list-style: none;
+    background: #fff;
+    border-bottom: 1px solid rgba(39, 38, 102, 0.08);
+  }
+
+  .start-custom-select__search {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    border: 1px solid rgba(39, 38, 102, 0.14);
+    border-radius: 8px;
+    font-family: "Sora", var(--sans);
+    font-size: 14px;
+    color: var(--start-ink);
+    background: #fff;
+    outline: none;
+  }
+
+  .start-custom-select__search:focus-visible {
+    border-color: rgba(39, 38, 102, 0.35);
+    box-shadow: 0 0 0 3px rgba(126, 123, 181, 0.18);
+  }
+
+  .start-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
+
+  .start-custom-select__option--compact {
+    padding: 8px 10px;
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .start-custom-select__option {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 8px;
+    font-family: "Sora", var(--sans);
+    font-size: 15px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    text-align: left;
+    color: var(--start-ink);
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .start-custom-select__option:hover {
+    background: rgba(39, 38, 102, 0.04);
+  }
+
+  .start-custom-select__option[aria-selected="true"] {
+    font-weight: 500;
+    color: #282560;
+    background: rgba(40, 37, 96, 0.06);
+  }
+
+  .start-hp {
+    position: absolute;
+    left: -9999px;
+    height: 0;
+    overflow: hidden;
+  }
+
+  .start-consent {
+    margin: 28px 0 0;
+    font-size: 13px;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+    color: var(--start-muted);
+  }
+
+  .start-error {
+    margin: 16px 0 0;
+    font-size: 14px;
+    color: #b42318;
+  }
+
+  .start-submit {
+    margin-top: 24px;
+    align-self: flex-end;
+    min-height: 52px;
+    padding: 0 32px;
+    border: 0;
+    border-radius: 999px;
+    font-family: "Sora", var(--sans);
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    color: #fff;
+    background: #282560;
+    cursor: pointer;
+    box-shadow:
+      rgba(40, 37, 96, 0.12) 0 1px 2px,
+      rgba(40, 37, 96, 0.08) 0 6px 12px;
+    transition: background 0.15s ease;
+  }
+
+  .start-submit:hover {
+    background: #1f1d4a;
+  }
+
+  .start-submit:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .start-success h2 {
+    margin: 0 0 12px;
+    font-size: clamp(22px, 3vw, 28px);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+  }
+
+  .start-success p {
+    margin: 0 0 24px;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--start-muted);
+  }
+
+  .start-back {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 0 22px;
+    border: 1.5px solid #282560;
+    border-radius: 100px;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+  }
+
+  @media (max-width: 900px) {
+    .start-layout {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+
+    .start-aside {
+      order: -1;
+      padding-bottom: 8px;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .start-page {
+      padding: 104px 0 96px;
+    }
+
+    .start-shell {
+      width: calc(100% - 48px);
+    }
+
+    .start-fieldset {
+      grid-template-columns: 1fr;
+    }
+
+    .start-field--full {
+      grid-column: 1;
+    }
+
+    .start-panel,
+    .start-success {
+      padding: 28px 20px 32px;
+    }
+  }
+</style>

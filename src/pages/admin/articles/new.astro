@@ -1,0 +1,32 @@
+---
+export const prerender = false;
+
+import ArticleForm from "../../../components/admin/ArticleForm.astro";
+import AdminShell from "../../../components/admin/AdminShell.astro";
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { requireAdminUser } from "../../../lib/supabase/server";
+
+const { user } = await requireAdminUser(Astro.cookies);
+if (!user) {
+  return Astro.redirect("/admin/login");
+}
+---
+
+<AdminLayout title="New article">
+  <AdminShell section="articles" userEmail={user.email}>
+    <nav class="admin-breadcrumb" aria-label="Breadcrumb">
+      <a href="/admin/articles">Articles</a>
+      <span aria-hidden="true">/</span>
+      New
+    </nav>
+
+    <header class="admin-page-head">
+      <h1>New article</h1>
+      <p class="admin-page-head__desc">
+        Draft privately, then publish. Headline, slug, excerpt, cover alt text, and H2s are what search engines see first.
+      </p>
+    </header>
+
+    <ArticleForm />
+  </AdminShell>
+</AdminLayout>

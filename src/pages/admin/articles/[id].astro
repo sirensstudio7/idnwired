@@ -1,0 +1,60 @@
+---
+export const prerender = false;
+
+import ArticleForm from "../../../components/admin/ArticleForm.astro";
+import AdminShell from "../../../components/admin/AdminShell.astro";
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import type { ArticleRow } from "../../../lib/news/schema";
+import { requireAdminUser } from "../../../lib/supabase/server";
+
+const { supabase, user } = await requireAdminUser(Astro.cookies);
+if (!user) {
+  return Astro.redirect("/admin/login");
+}
+
+const { id } = Astro.params;
+if (!id) {
+  return Astro.redirect("/admin/articles");
+}
+
+const { data: article, error } = await supabase.from("articles").select("*").eq("id", id).maybeSingle();
+
+if (error || !article) {
+  return Astro.redirect("/admin/articles");
+}
+
+const created = Astro.url.searchParams.get("created") === "1";
+const saved = Astro.url.searchParams.get("saved") === "1";
+---
+
+<AdminLayout title={article.title}>
+  <AdminShell section="articles" userEmail={user.email}>
+    <nav class="admin-breadcrumb" aria-label="Breadcrumb">
+      <a href="/admin/articles">Articles</a>
+      <span aria-hidden="true">/</span>
+      {article.title}
+    </nav>
+
+    {
+      created ? (
+        <div class="admin-notice admin-notice--ok" role="status">
+          Article created. Review SEO fields, then set status to published.
+        </div>
+      ) : null
+    }
+    {
+      saved ? (
+        <div class="admin-notice admin-notice--ok" role="status">
+          Article saved.
+        </div>
+      ) : null
+    }
+
+    <header class="admin-page-head">
+      <h1>Edit article</h1>
+      <p class="admin-page-head__desc">Published stories go live at /news/{article.slug}.</p>
+    </header>
+
+    <ArticleForm article={article as ArticleRow} />
+  </AdminShell>
+</AdminLayout>

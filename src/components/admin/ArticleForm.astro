@@ -1,0 +1,562 @@
+---
+import { articleBodyToHtml } from "../../lib/news/html";
+import { ARTICLE_CATEGORIES, type ArticleRow } from "../../lib/news/schema";
+import AdminCustomSelect from "./AdminCustomSelect.astro";
+
+interface Props {
+  article?: ArticleRow | null;
+}
+
+const { article = null } = Astro.props;
+const isEdit = Boolean(article);
+const action = isEdit ? `/api/admin/articles/${article!.id}` : "/api/admin/articles";
+const method = isEdit ? "PATCH" : "POST";
+const today = new Date().toISOString().slice(0, 10);
+const publishedValue = article?.published_at ? article.published_at.slice(0, 10) : today;
+const defaultAuthor = article?.author_name ?? "IDNWIRED editorial";
+const defaultRole = article?.author_role ?? "Press desk";
+const editorHtml = articleBodyToHtml(article?.body_markdown ?? "");
+const statusValue = article?.status === "published" ? "published" : "draft";
+const categoryValue = article?.category ?? "Insights";
+const featuredValue = article?.featured_on_home ? "yes" : "no";
+---
+
+<form class="admin-article-form" data-article-form data-action={action} data-method={method} novalidate>
+  <p class="admin-notice admin-notice--error" data-article-error hidden></p>
+
+  <div class="admin-article-grid">
+    <div class="admin-article-main">
+      <section class="admin-card admin-article-card">
+        <label class="admin-field">
+          <span>Headline</span>
+          <input
+            type="text"
+            name="title"
+            required
+            maxlength="180"
+            value={article?.title ?? ""}
+            placeholder="Investment flows shift beyond Java as regional hubs accelerate"
+            data-article-title
+          />
+          <small>This is the H1 on the article page. Keep it specific and readable.</small>
+        </label>
+
+        <label class="admin-field">
+          <span>URL slug</span>
+          <span class="admin-slug-preview">idnwired.com/news/<strong data-slug-preview>{article?.slug ?? ""}</strong></span>
+          <input
+            type="text"
+            name="slug"
+            required
+            maxlength="80"
+            value={article?.slug ?? ""}
+            placeholder="investment-flows-beyond-java"
+            data-article-slug
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <small>Lowercase, hyphens, no stop words if you can avoid them. This is the canonical path.</small>
+        </label>
+      </section>
+
+      <section class="admin-card admin-article-card">
+        <div class="admin-field">
+          <span>Body</span>
+          <div class="admin-editor" data-article-editor>
+            <div
+              class:list={["admin-editor__canvas", !editorHtml && "is-empty"]}
+              contenteditable="true"
+              role="textbox"
+              aria-multiline="true"
+              aria-label="Article body"
+              data-editor-canvas
+              data-placeholder="Tell the story…"
+              spellcheck="true"
+              set:html={editorHtml}
+            ></div>
+
+            <button type="button" class="admin-editor__plus" data-plus hidden aria-label="Insert block">
+              <span aria-hidden="true"></span>
+            </button>
+            <div class="admin-editor__insert" data-insert-menu hidden>
+              <button type="button" data-command="insertImage" title="Image" aria-label="Image">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="9" cy="10" r="1.25"/><path d="m21 16-4.5-4.5L8 20"/></svg>
+              </button>
+              <button type="button" data-block="h2" title="Heading" aria-label="Heading">H</button>
+              <button type="button" data-command="insertUnorderedList" title="List" aria-label="List">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="5" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="5" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="5" cy="18" r="1" fill="currentColor" stroke="none"/></svg>
+              </button>
+              <button type="button" data-command="blockquote" title="Quote" aria-label="Quote">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M7 17h4l2-6V7H7v4h4M15 17h4l2-6V7h-6v4h4"/></svg>
+              </button>
+            </div>
+
+            <div class="admin-editor__tip" data-format-toolbar hidden>
+              <div class="admin-editor__tip-main" data-tip-main>
+                <button type="button" class="admin-editor__tip-btn admin-editor__tip-btn--text" data-command="bold" title="Bold" aria-label="Bold"><span>B</span></button>
+                <button type="button" class="admin-editor__tip-btn admin-editor__tip-btn--text" data-command="italic" title="Italic" aria-label="Italic"><span>I</span></button>
+                <button type="button" class="admin-editor__tip-btn" data-command="createLink" title="Link" aria-label="Link">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M9 12a5 5 0 0 1 0-7l1.5-1.5a5 5 0 0 1 7 7L16 12M15 12a5 5 0 0 1 0 7L13.5 20.5a5 5 0 1 1-7-7L8 12"/></svg>
+                </button>
+                <span class="admin-editor__tip-sep" aria-hidden="true"></span>
+                <button type="button" class="admin-editor__tip-btn admin-editor__tip-btn--text" data-block="h2" title="Heading 2" aria-label="Heading 2"><span>H2</span></button>
+                <button type="button" class="admin-editor__tip-btn admin-editor__tip-btn--text" data-block="h3" title="Heading 3" aria-label="Heading 3"><span>H3</span></button>
+                <button type="button" class="admin-editor__tip-btn" data-command="blockquote" title="Quote" aria-label="Quote">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M7 17h4l2-6V7H7v4h4M15 17h4l2-6V7h-6v4h4"/></svg>
+                </button>
+              </div>
+              <div class="admin-editor__tip-link" data-link-popover hidden>
+                <input type="url" placeholder="Paste a link" data-link-url aria-label="Link URL" />
+                <button type="button" data-link-apply>Apply</button>
+                <button type="button" data-link-remove>Remove</button>
+              </div>
+            </div>
+
+            <input
+              class="admin-sr-only"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+              data-editor-image
+            />
+            <p class="admin-editor__status" data-editor-status hidden></p>
+            <textarea class="admin-sr-only" name="body_markdown" data-article-body tabindex="-1" aria-hidden="true">{editorHtml}</textarea>
+          </div>
+          <small>Select text to format. Press + on an empty line to add an image or heading.</small>
+        </div>
+      </section>
+    </div>
+
+    <aside class="admin-article-side">
+      <section class="admin-card admin-article-card">
+        <h2>Publish</h2>
+        <div class="admin-field">
+          <span>Status</span>
+          <AdminCustomSelect
+            name="status"
+            label="Status"
+            value={statusValue}
+            options={[
+              { value: "draft", label: "Draft" },
+              { value: "published", label: "Published" },
+            ]}
+          />
+        </div>
+        <label class="admin-field">
+          <span>Publish date</span>
+          <input type="date" name="published_at" value={publishedValue} />
+        </label>
+        <div class="admin-field">
+          <span>Category</span>
+          <AdminCustomSelect
+            name="category"
+            label="Category"
+            value={categoryValue}
+            options={ARTICLE_CATEGORIES.map((category) => ({ value: category, label: category }))}
+          />
+        </div>
+        <div class="admin-field">
+          <div class="admin-field__label">
+            <span>Landing page</span>
+            <span class="admin-tip">
+              <button
+                type="button"
+                class="admin-tip__btn"
+                aria-label="Landing page details"
+                aria-describedby="landing-page-tip"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <circle cx="8" cy="8" r="6.25" stroke="currentColor" stroke-width="1.5"></circle>
+                  <path d="M8 7.25v3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+                  <circle cx="8" cy="5.15" r="0.85" fill="currentColor"></circle>
+                </svg>
+              </button>
+              <span class="admin-tip__bubble" id="landing-page-tip" role="tooltip">
+                Highlight puts this story in the homepage news carousel.
+              </span>
+            </span>
+          </div>
+          <AdminCustomSelect
+            name="featured_on_home"
+            label="Landing page"
+            value={featuredValue}
+            options={[
+              { value: "no", label: "No" },
+              { value: "yes", label: "Highlight" },
+            ]}
+          />
+        </div>
+        <div class="admin-article-actions">
+          <button class="admin-btn admin-btn--primary" type="submit" data-article-submit>
+            {isEdit ? "Save article" : "Create article"}
+          </button>
+          {
+            isEdit && article?.status === "published" ? (
+              <a class="admin-btn" href={`/news/${article.slug}`} target="_blank" rel="noopener noreferrer">
+                View live
+              </a>
+            ) : null
+          }
+        </div>
+      </section>
+
+      <section class="admin-card admin-article-card">
+        <h2>Search preview</h2>
+        <div class="admin-serp" aria-hidden="true">
+          <p class="admin-serp__url">idnwired.com › news › <span data-slug-preview>{article?.slug ?? ""}</span></p>
+          <p class="admin-serp__title" data-seo-title-preview>
+            {article?.seo_title || article?.title || "Article title — IDNWIRED"}
+          </p>
+          <p class="admin-serp__desc" data-seo-desc-preview>
+            {article?.seo_description || article?.excerpt || "Meta description appears here."}
+          </p>
+        </div>
+        <label class="admin-field">
+          <span>SEO title <em data-count-seo-title>0/60</em></span>
+          <input
+            type="text"
+            name="seo_title"
+            maxlength="70"
+            value={article?.seo_title ?? ""}
+            placeholder="Defaults to the headline"
+            data-seo-title
+          />
+        </label>
+        <label class="admin-field">
+          <span>Meta description <em data-count-excerpt>0/160</em></span>
+          <textarea
+            name="excerpt"
+            rows="4"
+            maxlength="220"
+            required
+            placeholder="One or two sentences that match search intent. This is also the excerpt on the homepage."
+            data-seo-desc>{article?.excerpt ?? ""}</textarea>
+        </label>
+        <label class="admin-field">
+          <span>SEO description override</span>
+          <textarea
+            name="seo_description"
+            rows="3"
+            maxlength="160"
+            placeholder="Optional. If empty, meta description uses the excerpt."
+            data-seo-override>{article?.seo_description ?? ""}</textarea>
+        </label>
+        <label class="admin-field">
+          <span>Canonical URL</span>
+          <input
+            type="url"
+            name="canonical_url"
+            value={article?.canonical_url ?? ""}
+            placeholder="Leave blank to use https://idnwired.com/news/slug"
+          />
+        </label>
+      </section>
+
+      <section class="admin-card admin-article-card">
+        <h2>Cover image</h2>
+        <div class="admin-upload" data-image-upload="cover">
+          <input type="hidden" name="cover_image_url" value={article?.cover_image_url ?? ""} data-upload-url />
+          <div class="admin-upload__preview admin-upload__preview--cover" data-upload-preview>
+            {
+              article?.cover_image_url ? (
+                <img src={article.cover_image_url} alt="" />
+              ) : (
+                <span>No cover yet</span>
+              )
+            }
+          </div>
+          <div class="admin-upload__actions">
+            <label class="admin-btn admin-upload__btn">
+              <input
+                class="admin-sr-only"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                data-upload-file
+              />
+              <span data-upload-label>Upload image</span>
+            </label>
+            <span class="admin-tip">
+              <button
+                type="button"
+                class="admin-tip__btn"
+                aria-label="Upload details"
+                aria-describedby="cover-webp-tip"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <circle cx="8" cy="8" r="6.25" stroke="currentColor" stroke-width="1.5"></circle>
+                  <path d="M8 7.25v3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+                  <circle cx="8" cy="5.15" r="0.85" fill="currentColor"></circle>
+                </svg>
+              </button>
+              <span class="admin-tip__bubble" id="cover-webp-tip" role="tooltip">
+                Converted to compressed WebP on upload.
+              </span>
+            </span>
+          </div>
+          <p class="admin-upload__status" data-upload-status hidden></p>
+        </div>
+        <label class="admin-field">
+          <span>Alt text</span>
+          <input
+            type="text"
+            name="cover_image_alt"
+            maxlength="160"
+            value={article?.cover_image_alt ?? ""}
+            placeholder="Describe what is in the photo"
+          />
+          <small>Required to publish. Used for accessibility and image search.</small>
+        </label>
+      </section>
+
+      <section class="admin-card admin-article-card">
+        <h2>Author</h2>
+        <label class="admin-field">
+          <span>Name</span>
+          <input type="text" name="author_name" maxlength="80" value={defaultAuthor} required />
+        </label>
+        <label class="admin-field">
+          <span>Role</span>
+          <input type="text" name="author_role" maxlength="80" value={defaultRole} />
+        </label>
+        <div class="admin-upload admin-upload--avatar" data-image-upload="author">
+          <span class="admin-field"><span>Photo</span></span>
+          <input type="hidden" name="author_avatar_url" value={article?.author_avatar_url ?? ""} data-upload-url />
+          <div class="admin-upload__row">
+            <div class="admin-upload__preview admin-upload__preview--avatar" data-upload-preview>
+              {
+                article?.author_avatar_url ? (
+                  <img src={article.author_avatar_url} alt="" />
+                ) : (
+                  <span>No photo</span>
+                )
+              }
+            </div>
+            <div class="admin-upload__actions">
+              <label class="admin-btn admin-upload__btn">
+                <input
+                  class="admin-sr-only"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                  data-upload-file
+                />
+                <span data-upload-label>Upload photo</span>
+              </label>
+              <span class="admin-tip">
+                <button
+                  type="button"
+                  class="admin-tip__btn"
+                  aria-label="Upload details"
+                  aria-describedby="author-webp-tip"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <circle cx="8" cy="8" r="6.25" stroke="currentColor" stroke-width="1.5"></circle>
+                    <path d="M8 7.25v3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+                    <circle cx="8" cy="5.15" r="0.85" fill="currentColor"></circle>
+                  </svg>
+                </button>
+                <span class="admin-tip__bubble" id="author-webp-tip" role="tooltip">
+                  Converted to compressed WebP on upload.
+                </span>
+              </span>
+            </div>
+          </div>
+          <p class="admin-upload__status" data-upload-status hidden></p>
+        </div>
+      </section>
+    </aside>
+  </div>
+</form>
+
+<script>
+  import { bindArticleEditor } from "./article-editor";
+  import { bindAdminCustomSelects } from "./custom-select";
+
+  function slugify(value: string) {
+    return value
+      .toLowerCase()
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 80);
+  }
+
+  function initArticleForm() {
+    const form = document.querySelector("[data-article-form]") as HTMLFormElement | null;
+    if (!form || form.dataset.bound === "1") return;
+    form.dataset.bound = "1";
+
+    const title = form.querySelector("[data-article-title]") as HTMLInputElement;
+    const slug = form.querySelector("[data-article-slug]") as HTMLInputElement;
+    const seoTitle = form.querySelector("[data-seo-title]") as HTMLInputElement;
+    const excerpt = form.querySelector("[data-seo-desc]") as HTMLTextAreaElement;
+    const seoOverride = form.querySelector("[data-seo-override]") as HTMLTextAreaElement;
+    const errorBox = form.querySelector("[data-article-error]") as HTMLElement;
+    const submit = form.querySelector("[data-article-submit]") as HTMLButtonElement;
+    const slugPreviews = form.querySelectorAll("[data-slug-preview]");
+    const titlePreview = form.querySelector("[data-seo-title-preview]");
+    const descPreview = form.querySelector("[data-seo-desc-preview]");
+    const countTitle = form.querySelector("[data-count-seo-title]");
+    const countExcerpt = form.querySelector("[data-count-excerpt]");
+    let slugTouched = Boolean(slug?.value);
+
+    const syncSlug = () => {
+      const value = slug.value || slugify(title.value);
+      slugPreviews.forEach((node) => {
+        node.textContent = value || "article-slug";
+      });
+    };
+
+    const syncPreview = () => {
+      const headline = seoTitle.value.trim() || title.value.trim() || "Article title";
+      const desc = seoOverride.value.trim() || excerpt.value.trim() || "Meta description appears here.";
+      if (titlePreview) titlePreview.textContent = `${headline.replace(/\.$/, "")} — IDNWIRED`;
+      if (descPreview) descPreview.textContent = desc;
+      if (countTitle) countTitle.textContent = `${(seoTitle.value || title.value).length}/60`;
+      if (countExcerpt) countExcerpt.textContent = `${excerpt.value.length}/160`;
+    };
+
+    title?.addEventListener("input", () => {
+      if (!slugTouched) slug.value = slugify(title.value);
+      syncSlug();
+      syncPreview();
+    });
+    slug?.addEventListener("input", () => {
+      slugTouched = true;
+      slug.value = slugify(slug.value);
+      syncSlug();
+    });
+    seoTitle?.addEventListener("input", syncPreview);
+    excerpt?.addEventListener("input", syncPreview);
+    seoOverride?.addEventListener("input", syncPreview);
+    syncSlug();
+    syncPreview();
+    bindAdminCustomSelects(form);
+
+    let uploadsInFlight = 0;
+    const editorRoot = form.querySelector("[data-article-editor]") as HTMLElement | null;
+    const bodyField = form.querySelector("[data-article-body]") as HTMLTextAreaElement | null;
+    const editor = editorRoot && bodyField
+      ? bindArticleEditor(editorRoot, {
+          textarea: bodyField,
+          onBusy: (busy) => {
+            uploadsInFlight = Math.max(0, uploadsInFlight + (busy ? 1 : -1));
+            submit.disabled = uploadsInFlight > 0;
+          },
+        })
+      : null;
+
+    const setPreview = (root: Element, url: string) => {
+      const preview = root.querySelector("[data-upload-preview]");
+      if (!preview) return;
+      preview.replaceChildren();
+      if (!url) {
+        const empty = document.createElement("span");
+        empty.textContent = "No image";
+        preview.append(empty);
+        return;
+      }
+      const img = document.createElement("img");
+      img.src = url;
+      img.alt = "";
+      preview.append(img);
+    };
+
+    form.querySelectorAll("[data-image-upload]").forEach((root) => {
+      const input = root.querySelector("[data-upload-file]") as HTMLInputElement | null;
+      const urlField = root.querySelector("[data-upload-url]") as HTMLInputElement | null;
+      const status = root.querySelector("[data-upload-status]") as HTMLElement | null;
+      const label = root.querySelector("[data-upload-label]");
+      const kind = root.getAttribute("data-image-upload") ?? "cover";
+      if (!input || !urlField) return;
+
+      input.addEventListener("change", async () => {
+        const file = input.files?.[0];
+        input.value = "";
+        if (!file) return;
+
+        uploadsInFlight += 1;
+        submit.disabled = true;
+        if (status) {
+          status.hidden = false;
+          status.textContent = "Uploading…";
+        }
+        if (label) label.textContent = "Uploading…";
+
+        const body = new FormData();
+        body.set("kind", kind);
+        body.set("file", file);
+
+        try {
+          const res = await fetch("/api/admin/media", { method: "POST", body });
+          const json = (await res.json()) as { error?: string; url?: string };
+          if (!res.ok || !json.url) {
+            if (status) status.textContent = json.error ?? "Upload failed.";
+            return;
+          }
+          urlField.value = json.url;
+          setPreview(root, json.url);
+          if (status) {
+            status.textContent = "Uploaded.";
+          }
+        } catch {
+          if (status) status.textContent = "Upload failed. Try again.";
+        } finally {
+          uploadsInFlight = Math.max(0, uploadsInFlight - 1);
+          if (label) label.textContent = kind === "author" ? "Upload photo" : "Upload image";
+          if (uploadsInFlight === 0) submit.disabled = false;
+        }
+      });
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      errorBox.hidden = true;
+      editor?.sync();
+      if (uploadsInFlight > 0 || editor?.isBusy()) {
+        errorBox.textContent = "Wait for the image upload to finish.";
+        errorBox.hidden = false;
+        return;
+      }
+      submit.disabled = true;
+      const previous = submit.textContent;
+      submit.textContent = "Saving…";
+
+      const data = new FormData(form);
+      const payload = Object.fromEntries(
+        [...data.entries()].filter((entry) => typeof entry[1] === "string"),
+      );
+
+      try {
+        const res = await fetch(form.dataset.action ?? "/api/admin/articles", {
+          method: form.dataset.method ?? "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const json = (await res.json()) as { error?: string; id?: string };
+        if (!res.ok) {
+          errorBox.textContent = json.error ?? "Could not save.";
+          errorBox.hidden = false;
+          submit.disabled = false;
+          submit.textContent = previous;
+          return;
+        }
+        if (form.dataset.method === "POST" && json.id) {
+          window.location.href = `/admin/articles/${json.id}?created=1`;
+          return;
+        }
+        const url = new URL(window.location.href);
+        url.searchParams.set("saved", "1");
+        url.searchParams.delete("created");
+        window.location.href = url.toString();
+      } catch {
+        errorBox.textContent = "Network error. Try again.";
+        errorBox.hidden = false;
+        submit.disabled = false;
+        submit.textContent = previous;
+      }
+    });
+  }
+
+  initArticleForm();
+  document.addEventListener("astro:page-load", initArticleForm);
+</script>

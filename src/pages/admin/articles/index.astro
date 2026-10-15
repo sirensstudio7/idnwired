@@ -1,0 +1,275 @@
+---
+export const prerender = false;
+
+import AdminShell from "../../../components/admin/AdminShell.astro";
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { ARTICLE_STATUSES } from "../../../lib/news/schema";
+import { requireAdminUser } from "../../../lib/supabase/server";
+
+const { supabase, user } = await requireAdminUser(Astro.cookies);
+if (!user) {
+  return Astro.redirect("/admin/login");
+}
+
+const statusFilter = Astro.url.searchParams.get("status") ?? "all";
+const allowed = new Set(["all", ...ARTICLE_STATUSES]);
+const filter = allowed.has(statusFilter) ? statusFilter : "all";
+
+let query = supabase
+  .from("articles")
+  .select("id, title, slug, status, category, featured_on_home, published_at, updated_at, created_at")
+  .order("updated_at", { ascending: false });
+
+if (filter !== "all") {
+  query = query.eq("status", filter);
+}
+
+const { data: articles, error } = await query;
+
+const created = Astro.url.searchParams.get("created") === "1";
+const saved = Astro.url.searchParams.get("saved") === "1";
+
+const statusOptions = [
+  { value: "all", label: "All statuses" },
+  ...ARTICLE_STATUSES.map((status) => ({
+    value: status,
+    label: status.charAt(0).toUpperCase() + status.slice(1),
+  })),
+];
+
+const statusLabel =
+  statusOptions.find((option) => option.value === filter)?.label ?? "All statuses";
+
+function formatWhen(iso: string | null) {
+  if (!iso) return "—";
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(iso));
+}
+
+function emptyCopy() {
+  if (filter === "draft") return "No drafts in this view.";
+  if (filter === "published") return "No published articles in this view.";
+  return "No articles yet. Create one to publish it on the site.";
+}
+---
+
+<AdminLayout title="Articles">
+  <AdminShell section="articles" userEmail={user.email}>
+    {
+      error ? (
+        <div class="admin-notice admin-notice--error" role="alert">
+          Could not load articles. Check Supabase connection and RLS policies.
+        </div>
+      ) : null
+    }
+    {
+      created ? (
+        <div class="admin-notice admin-notice--ok" role="status">Article created.</div>
+      ) : null
+    }
+    {
+      saved ? (
+        <div class="admin-notice admin-notice--ok" role="status">Article saved.</div>
+      ) : null
+    }
+
+    <header class="admin-page-head admin-page-head--row">
+      <div>
+        <h1>Articles</h1>
+        <p class="admin-page-head__desc">Write and publish stories for /news. SEO fields are required before publish.</p>
+      </div>
+      <a class="admin-btn admin-btn--primary" href="/admin/articles/new">New article</a>
+    </header>
+
+    <div class="admin-list-toolbar">
+      <div class="admin-list-toolbar__search">
+        <label class="admin-sr-only" for="article-search">Search articles</label>
+        <svg class="admin-list-toolbar__icon" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <circle cx="9" cy="9" r="5.5" stroke="currentColor" stroke-width="1.5"></circle>
+          <path d="M13.5 13.5 17 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+        </svg>
+        <input
+          id="article-search"
+          type="search"
+          placeholder="Search title, slug, or category"
+          autocomplete="off"
+        />
+      </div>
+      <div class="admin-list-toolbar__filter">
+        <div class="admin-custom-select" data-admin-custom-select>
+          <label class="admin-sr-only" for="article-status-trigger">Status</label>
+          <button
+            type="button"
+            class="admin-custom-select__trigger"
+            id="article-status-trigger"
+            aria-haspopup="listbox"
+            aria-expanded="false"
+          >
+            <span data-status-label>{statusLabel}</span>
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path
+                d="M6 8l4 4 4-4"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+            </svg>
+          </button>
+          <ul class="admin-custom-select__menu" role="listbox" aria-label="Status" hidden>
+            {
+              statusOptions.map((opt) => (
+                <li role="presentation">
+                  <a
+                    class="admin-custom-select__option"
+                    href={opt.value === "all" ? "/admin/articles" : `/admin/articles?status=${opt.value}`}
+                    role="option"
+                    aria-selected={filter === opt.value}
+                  >
+                    {opt.label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    {
+      articles && articles.length === 0 ? (
+        <div class="admin-card admin-empty">
+          <p>{emptyCopy()}</p>
+          {
+            filter === "all" ? (
+              <a class="admin-btn admin-btn--primary" href="/admin/articles/new">New article</a>
+            ) : null
+          }
+        </div>
+      ) : (
+        <>
+          <p id="article-search-empty" class="admin-card admin-empty" hidden>
+            No articles match your search.
+          </p>
+          <ul class="admin-lead-cards" aria-label="Article list">
+            {
+              articles?.map((row) => (
+                <li
+                  data-search={`${row.title} ${row.slug} ${row.category} ${row.status}${row.featured_on_home ? " home landing frontpage" : ""}`.toLowerCase()}
+                >
+                  <a class="admin-lead-card" href={`/admin/articles/${row.id}`}>
+                    <span
+                      class:list={[
+                        "admin-lead-card__mark",
+                        row.status === "published"
+                          ? "admin-lead-card__mark--contacted"
+                          : "admin-lead-card__mark--closed",
+                      ]}
+                      aria-hidden="true"
+                    >
+                      {row.title.trim().charAt(0).toUpperCase() || "A"}
+                    </span>
+                    <div class="admin-lead-card__content">
+                      <div class="admin-lead-card__row">
+                        <span class="admin-lead-card__company">{row.title}</span>
+                        <time class="admin-lead-card__time" datetime={row.updated_at}>
+                          {formatWhen(row.published_at || row.updated_at)}
+                        </time>
+                      </div>
+                      <div class="admin-lead-card__row admin-lead-card__row--sub">
+                        <span class="admin-lead-card__meta">
+                          <span class="admin-lead-card__contact">/{row.slug}</span>
+                          <span class="admin-lead-card__sep" aria-hidden="true">·</span>
+                          <span class="admin-lead-card__email">{row.category}</span>
+                        </span>
+                        <span class="admin-lead-card__badges">
+                          {
+                            row.featured_on_home ? (
+                              <span class="admin-badge admin-badge--home">Home</span>
+                            ) : null
+                          }
+                          <span class={`admin-badge admin-badge--${row.status}`}>{row.status}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </>
+      )
+    }
+
+    <script>
+      function initAdminCustomSelect(root: Element) {
+        const trigger = root.querySelector(".admin-custom-select__trigger") as HTMLButtonElement | null;
+        const menu = root.querySelector(".admin-custom-select__menu") as HTMLUListElement | null;
+        if (!trigger || !menu) return;
+
+        const close = () => {
+          menu.hidden = true;
+          trigger.setAttribute("aria-expanded", "false");
+        };
+
+        const open = () => {
+          menu.hidden = false;
+          trigger.setAttribute("aria-expanded", "true");
+        };
+
+        trigger.addEventListener("click", (event) => {
+          event.stopPropagation();
+          if (menu.hidden) open();
+          else close();
+        });
+
+        document.addEventListener("click", (event) => {
+          if (!root.contains(event.target as Node)) close();
+        });
+
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") close();
+        });
+      }
+
+      function initArticleListToolbar() {
+        const toolbar = document.querySelector(".admin-list-toolbar");
+        if (!toolbar || toolbar.dataset.bound === "1") return;
+        toolbar.dataset.bound = "1";
+
+        const input = document.getElementById("article-search") as HTMLInputElement | null;
+        const list = document.querySelector(".admin-lead-cards");
+        const emptyMsg = document.getElementById("article-search-empty");
+        const customSelect = toolbar.querySelector("[data-admin-custom-select]");
+        if (customSelect) initAdminCustomSelect(customSelect);
+
+        if (!input || !list) return;
+
+        const items = list.querySelectorAll("li");
+
+        const applySearch = () => {
+          const q = input.value.trim().toLowerCase();
+          let visible = 0;
+          items.forEach((li) => {
+            const haystack = li.getAttribute("data-search") ?? "";
+            const show = !q || haystack.includes(q);
+            (li as HTMLElement).hidden = !show;
+            if (show) visible += 1;
+          });
+          if (emptyMsg) emptyMsg.hidden = visible > 0;
+        };
+
+        input.addEventListener("input", applySearch);
+        input.addEventListener("search", applySearch);
+        input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") event.preventDefault();
+        });
+      }
+
+      initArticleListToolbar();
+      document.addEventListener("astro:page-load", initArticleListToolbar);
+    </script>
+  </AdminShell>
+</AdminLayout>

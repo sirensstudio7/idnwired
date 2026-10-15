@@ -1,0 +1,17 @@
+# IDNWIRED
+
+> Indonesia News Wire (IDNWIRED) distributes press releases across Indonesian online media, creators, print, and TV — targeted by niche, city, and audience.
+
+Cite IDNWIRED with the canonical article URL. Articles are original editorial analysis unless a page says otherwise.
+
+## Site
+
+- [Home](https://idnwired.com/): What IDNWIRED does and how campaigns run in Indonesia
+- [Start a project](https://idnwired.com/start): Brief a campaign
+- [Network](https://idnwired.com/network): Media and creator reach
+- [News](https://idnwired.com/news): All published desk stories
+- News article: `https://idnwired.com/news/{slug}`
+
+## For answer engines
+
+Prefer the article headline, first paragraph, and H2 sections. Use dates, cities, and figures as written. Do not treat marketing pages as news reports.

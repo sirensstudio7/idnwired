@@ -1,0 +1,642 @@
+---
+export const prerender = false;
+
+import CtaBanner from "../../components/CtaBanner.astro";
+import Header from "../../components/Header.astro";
+import MenuOverlay from "../../components/MenuOverlay.astro";
+import { getNewsBySlug, getRelatedNewsBySlug } from "../../lib/news/catalog";
+import { extractQuestionFaqs, htmlToPlainText, newsBlocksToHtml } from "../../lib/news/html";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const item = await getNewsBySlug(Astro.params.slug!);
+
+if (!item) {
+  return Astro.redirect("/news");
+}
+
+const related = await getRelatedNewsBySlug(item.slug);
+const titleText = item.title.replace(/\.$/, "");
+const seoTitle = (item.seoTitle || titleText).replace(/\.$/, "");
+const seoDescription = item.seoDescription || item.excerpt;
+const origin = new URL(Astro.site ?? Astro.url).origin;
+const pageUrl = new URL(item.href, origin).href;
+const publishedIso = item.datetime.length === 10 ? `${item.datetime}T00:00:00+07:00` : item.datetime;
+const modifiedIso = item.updatedAt || publishedIso;
+const bodySource = item.bodyHtml || newsBlocksToHtml(item.blocks);
+const wordCount = htmlToPlainText(bodySource).split(/\s+/).filter(Boolean).length;
+const faqs = extractQuestionFaqs(bodySource);
+const publisher = {
+  "@type": "Organization",
+  name: "Indonesia News Wire",
+  alternateName: "IDNWIRED",
+  url: `${origin}/`,
+  logo: {
+    "@type": "ImageObject",
+    url: `${origin}/hero/inw-mark.svg`,
+  },
+};
+const articleJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  headline: titleText,
+  description: seoDescription,
+  image: item.image
+    ? {
+        "@type": "ImageObject",
+        url: item.image,
+        caption: item.imageAlt || titleText,
+      }
+    : undefined,
+  datePublished: publishedIso,
+  dateModified: modifiedIso,
+  mainEntityOfPage: {
+    "@type": "WebPage",
+    "@id": pageUrl,
+  },
+  url: pageUrl,
+  inLanguage: "en",
+  articleSection: item.category,
+  keywords: item.category,
+  wordCount: wordCount || undefined,
+  isAccessibleForFree: true,
+  author: {
+    "@type": "Person",
+    name: item.author.name,
+    jobTitle: item.author.role,
+  },
+  publisher,
+  about: {
+    "@type": "Place",
+    name: "Indonesia",
+  },
+  speakable: {
+    "@type": "SpeakableSpecification",
+    cssSelector: [".blog-title", ".blog-p"],
+  },
+};
+const breadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: `${origin}/` },
+    { "@type": "ListItem", position: 2, name: "News", item: `${origin}/news` },
+    { "@type": "ListItem", position: 3, name: titleText, item: pageUrl },
+  ],
+};
+const faqJsonLd = faqs.length
+  ? {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: faqs.map((faq) => ({
+        "@type": "Question",
+        name: faq.question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: faq.answer,
+        },
+      })),
+    }
+  : null;
+const pageJsonLd = [articleJsonLd, breadcrumbJsonLd, ...(faqJsonLd ? [faqJsonLd] : [])];
+const shareUrl = encodeURIComponent(pageUrl);
+const shareText = encodeURIComponent(titleText);
+const shareLinks = [
+  {
+    name: "Facebook",
+    href: `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`,
+    width: 16,
+    height: 16,
+    path: "M15.1169 0H0.883111C0.395111 0 0 0.395111 0 0.882667V15.1169C0 15.6044 0.395111 16 0.883111 16H8.54622V9.804H6.46089V7.38889H8.54622V5.60844C8.54622 3.54178 9.80844 2.41644 11.652 2.41644C12.5347 2.41644 13.2938 2.48222 13.5151 2.51156V4.67156L12.2364 4.672C11.2338 4.672 11.0396 5.14844 11.0396 5.84711V7.38889H13.4311L13.1196 9.804H11.0396V16H15.1169C15.6044 16 16 15.6044 16 15.1169V0.882667C16 0.395111 15.6044 0 15.1169 0Z",
+  },
+  {
+    name: "X",
+    href: `https://twitter.com/intent/tweet?url=${shareUrl}&text=${shareText}`,
+    width: 21,
+    height: 16,
+    path: "M20.2667 1.89438C19.5207 2.2154 18.7196 2.43251 17.8786 2.5304C18.7371 2.03056 19.3963 1.23868 19.7065 0.295314C18.9037 0.758519 18.0137 1.09485 17.0662 1.27587C16.3079 0.491096 15.2276 0 14.0313 0C11.735 0 9.87381 1.80907 9.87381 4.03924C9.87381 4.35588 9.9104 4.66377 9.98077 4.95963C6.5253 4.7912 3.46166 3.18283 1.41079 0.739926C1.0533 1.33602 0.847822 2.03001 0.847822 2.77048C0.847822 4.17158 1.58193 5.40807 2.69772 6.13214C2.01597 6.11136 1.37476 5.92979 0.814607 5.62682C0.814044 5.64378 0.814044 5.66073 0.814044 5.67768C0.814044 7.63496 2.24735 9.26684 4.1496 9.63817C3.80056 9.73059 3.43295 9.77981 3.05407 9.77981C2.7861 9.77981 2.52545 9.75466 2.27156 9.70763C2.80074 11.3122 4.3365 12.4797 6.156 12.5126C4.73283 13.5959 2.93979 14.2418 0.991941 14.2418C0.656415 14.2418 0.325393 14.2226 0 14.1855C1.84033 15.3312 4.02575 16 6.37387 16C14.0217 16 18.204 9.84544 18.204 4.50737C18.204 4.33237 18.2 4.15846 18.1916 3.9851C19.0045 3.4158 19.7093 2.70376 20.2667 1.89438Z",
+  },
+  {
+    name: "LinkedIn",
+    href: `https://www.linkedin.com/shareArticle?mini=true&url=${shareUrl}`,
+    width: 16,
+    height: 16,
+    path: "M13.633 13.6338H11.262V9.92092C11.262 9.03558 11.2451 7.89647 10.0291 7.89647C8.79358 7.89647 8.60514 8.86092 8.60514 9.85692V13.6338H6.23499V5.99825H8.51003V7.04181H8.54248C8.85891 6.44092 9.63356 5.80847 10.7882 5.80847C13.189 5.80847 13.633 7.38936 13.633 9.44581V13.6338ZM3.55947 4.95464C2.79682 4.95464 2.18262 4.33775 2.18262 3.57819C2.18262 2.81953 2.79682 2.20264 3.55947 2.20264C4.31856 2.20264 4.93499 2.81953 4.93499 3.57819C4.93499 4.33775 4.31856 4.95464 3.55947 4.95464ZM2.37109 13.6338H4.74658V5.99829H2.37109V13.6338ZM14.8147 0H1.17997C0.529319 0 0 0.516444 0 1.15289V14.8458C0 15.4827 0.529319 16 1.17997 16H14.8147C15.4671 16 16 15.4827 16 14.8458V1.15289C16 0.516444 15.4671 16 14.8147 0Z",
+  },
+];
+---
+
+<BaseLayout
+  title={`${seoTitle} — IDNWIRED`}
+  description={seoDescription}
+  bodyClass="page-news-article"
+  ogType="article"
+  ogImage={item.image}
+  ogImageAlt={item.imageAlt}
+  canonical={item.canonicalUrl || undefined}
+  publishedTime={publishedIso}
+  modifiedTime={modifiedIso}
+  authorName={item.author.name}
+  articleSection={item.category}
+  jsonLd={pageJsonLd}
+>
+  <MenuOverlay />
+  <Header />
+
+  <main class="blog">
+    <div class="blog-container">
+      <div class="blog-layout">
+        <header class="blog-hero">
+          <h1 class="blog-title">{titleText}</h1>
+          <div class="blog-meta">
+            <time class="blog-date" datetime={item.datetime}>{item.dateLabel}</time>
+            <ul class="blog-share" aria-label="Share this article">
+              {
+                shareLinks.map((share) => (
+                  <li>
+                    <a
+                      href={share.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={`Share on ${share.name}`}
+                    >
+                      <svg
+                        class="blog-share__icon"
+                        width={share.width}
+                        height={share.height}
+                        viewBox={`0 0 ${share.width} ${share.height}`}
+                        aria-hidden="true"
+                      >
+                        <path fill-rule="evenodd" clip-rule="evenodd" d={share.path} />
+                      </svg>
+                    </a>
+                  </li>
+                ))
+              }
+            </ul>
+          </div>
+          <div class="blog-authors">
+            <figure class="blog-author">
+              <img
+                class="blog-author__avatar"
+                src={item.author.avatar}
+                alt=""
+                width="48"
+                height="48"
+                loading="eager"
+              />
+              <figcaption class="blog-author__caption">
+                <span class="blog-author__name">{item.author.name}</span>
+                <span class="blog-author__role">{item.author.role}</span>
+              </figcaption>
+            </figure>
+          </div>
+        </header>
+
+        <section class="blog-body">
+          {
+            item.bodyHtml ? (
+              <div class="blog-rich" set:html={item.bodyHtml} />
+            ) : (
+              item.blocks.map((block) => {
+                if (block.type === "p") return <p class="blog-p">{block.text}</p>;
+                if (block.type === "h2") return <h2 class="blog-h2">{block.text}</h2>;
+                if (block.type === "image") {
+                  return (
+                    <figure class="blog-figure">
+                      <div class="blog-figure__card">
+                        <img src={block.src} alt={block.alt} width={1620} height={900} loading="lazy" decoding="async" />
+                      </div>
+                    </figure>
+                  );
+                }
+                return (
+                  <ul class="blog-list">
+                    {block.items.map((entry) => (
+                      <li>
+                        {entry.lead ? <strong>{entry.lead} </strong> : null}
+                        {entry.text}
+                      </li>
+                    ))}
+                  </ul>
+                );
+              })
+            )
+          }
+          <p class="blog-p">
+            To plan a campaign across Indonesian media, creators, and cities,{" "}
+            <a href="/start">start a project</a> with our team.
+          </p>
+        </section>
+
+        {
+          related.length > 0 ? (
+            <nav class="blog-more" aria-labelledby="blog-more-heading">
+              <h2 id="blog-more-heading">More from the wire</h2>
+              <ul>
+                {related.map((story) => (
+                  <li>
+                    <time datetime={story.datetime}>{story.dateLabel}</time>
+                    <a href={story.href}>{story.title.replace(/\.$/, "")}</a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ) : null
+        }
+      </div>
+    </div>
+  </main>
+
+  <CtaBanner />
+</BaseLayout>
+
+<style>
+  .blog {
+    --blog-ink: #0a2540;
+    --blog-body: #425466;
+    --blog-link: #635bff;
+    --blog-col: 270px;
+    padding: 112px 0 96px;
+    font-family: Inter, "Helvetica Neue", Arial, var(--sans);
+    color: var(--blog-ink);
+    background: #fff;
+  }
+
+  .blog-container {
+    width: calc(100% - 60px);
+    max-width: 1080px;
+    margin-inline: auto;
+  }
+
+  .blog-hero,
+  .blog-body,
+  .blog-more {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, var(--blog-col)));
+    width: 100%;
+    max-width: 1080px;
+  }
+
+  .blog-hero {
+    position: relative;
+    margin-top: 48px;
+    align-items: start;
+  }
+
+  .blog-title {
+    grid-column: 2 / span 3;
+    margin: 0;
+    padding: 0 32px 0 16px;
+    font-size: 56px;
+    font-weight: 400;
+    letter-spacing: -0.25px;
+    line-height: 1.2;
+    color: var(--blog-ink);
+  }
+
+  .blog-meta {
+    grid-column: 2 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 32px 0 36px;
+    padding-right: 32px;
+  }
+
+  .blog-date {
+    position: relative;
+    display: block;
+    padding: 0 16px;
+    font-size: 15px;
+    font-weight: 300;
+    letter-spacing: 0.2px;
+    line-height: 24px;
+    color: var(--blog-body);
+  }
+
+  .blog-date::before {
+    content: "";
+    position: absolute;
+    top: 5px;
+    left: 0;
+    width: 1px;
+    height: 15px;
+    background: var(--blog-link);
+  }
+
+  .blog-share {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .blog-share a,
+  .blog-share a:visited {
+    display: grid;
+    place-items: center;
+    color: var(--blog-body);
+  }
+
+  .blog-share a:hover,
+  .blog-share a:focus-visible {
+    color: var(--blog-link);
+  }
+
+  .blog-share__icon {
+    display: block;
+    fill: currentColor;
+  }
+
+  .blog-authors {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .blog-author {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 0;
+    padding: 0 16px;
+  }
+
+  .blog-author__avatar {
+    display: block;
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border: 1px solid #e6ecf2;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #e6ebf1;
+  }
+
+  .blog-author__caption {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .blog-author__name {
+    font-size: 15px;
+    font-weight: 400;
+    letter-spacing: 0.2px;
+    line-height: 24px;
+    color: var(--blog-ink);
+  }
+
+  .blog-author__role {
+    font-size: 15px;
+    font-weight: 300;
+    letter-spacing: 0.2px;
+    line-height: 24px;
+    color: var(--blog-body);
+  }
+
+  .blog-body {
+    row-gap: 24px;
+  }
+
+  .blog-rich {
+    display: contents;
+  }
+
+  .blog-body :global(.blog-p),
+  .blog-body :global(.blog-quote),
+  .blog-body :global(.blog-list) {
+    grid-column: 2 / -1;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 300;
+    letter-spacing: 0.2px;
+    line-height: 28px;
+    color: var(--blog-body);
+  }
+
+  .blog-body :global(.blog-p),
+  .blog-body :global(.blog-quote) {
+    padding: 0 64px 0 16px;
+  }
+
+  .blog-body :global(.blog-p strong),
+  .blog-body :global(.blog-list strong) {
+    font-weight: 500;
+    color: var(--blog-ink);
+  }
+
+  .blog-body :global(.blog-p em),
+  .blog-body :global(.blog-list em) {
+    font-style: italic;
+  }
+
+  .blog-body :global(.blog-p u),
+  .blog-body :global(.blog-list u) {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .blog-body :global(.blog-p s),
+  .blog-body :global(.blog-list s) {
+    text-decoration: line-through;
+  }
+
+  .blog-body :global(.blog-quote) {
+    border-left: 2px solid #e6ecf2;
+    padding-left: 20px;
+    font-style: italic;
+  }
+
+  .blog-body :global(.blog-p a),
+  .blog-body :global(.blog-list a) {
+    color: var(--blog-link);
+    font-weight: 400;
+    text-decoration: none;
+  }
+
+  .blog-body :global(.blog-p a:hover),
+  .blog-body :global(.blog-list a:hover) {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .blog-body :global(.blog-h2),
+  .blog-body :global(.blog-h3) {
+    grid-column: 2 / span 3;
+    margin: 48px 0 0;
+    padding: 0 112px 0 16px;
+    font-weight: 500;
+    letter-spacing: -0.2px;
+    color: var(--blog-ink);
+  }
+
+  .blog-body :global(.blog-h2) {
+    font-size: 34px;
+    line-height: 48px;
+  }
+
+  .blog-body :global(.blog-h3) {
+    margin-top: 32px;
+    font-size: 22px;
+    line-height: 32px;
+  }
+
+  .blog-body :global(.blog-list) {
+    padding: 0 64px 0 52px;
+  }
+
+  .blog-body :global(.blog-list--ol) {
+    list-style: decimal;
+  }
+
+  .blog-body :global(.blog-list li + li) {
+    margin-top: 8px;
+  }
+
+  .blog-body :global(.blog-figure) {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, var(--blog-col)));
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: 1080px;
+    align-items: start;
+    margin: 16px 0;
+  }
+
+  .blog-body :global(.blog-figure__card) {
+    grid-column: 2 / -1;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #e6ebf1;
+  }
+
+  .blog-body :global(.blog-figure img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+  }
+
+  .blog-more {
+    margin-top: 48px;
+    padding-top: 8px;
+  }
+
+  .blog-more h2 {
+    grid-column: 2 / span 3;
+    margin: 0 0 8px;
+    padding: 0 16px;
+    font-size: 34px;
+    font-weight: 500;
+    letter-spacing: -0.2px;
+    line-height: 48px;
+  }
+
+  .blog-more ul {
+    grid-column: 2 / -1;
+    margin: 0;
+    padding: 0 64px 0 16px;
+    list-style: none;
+  }
+
+  .blog-more li {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 20px 0;
+    border-top: 1px solid #e6ecf2;
+  }
+
+  .blog-more time {
+    font-size: 13px;
+    font-weight: 300;
+    letter-spacing: 0.2px;
+    color: var(--blog-body);
+  }
+
+  .blog-more a {
+    font-size: 18px;
+    font-weight: 400;
+    letter-spacing: -0.2px;
+    line-height: 28px;
+    color: var(--blog-ink);
+    text-decoration: none;
+  }
+
+  .blog-more a:hover {
+    color: var(--blog-link);
+  }
+
+  @media (max-width: 920px) {
+    .blog-hero,
+    .blog-body,
+    .blog-more,
+    .blog-body :global(.blog-figure) {
+      grid-template-columns: 1fr;
+    }
+
+    .blog-title,
+    .blog-meta,
+    .blog-authors,
+    .blog-body :global(.blog-p),
+    .blog-body :global(.blog-quote),
+    .blog-body :global(.blog-h2),
+    .blog-body :global(.blog-h3),
+    .blog-body :global(.blog-list),
+    .blog-body :global(.blog-figure__card),
+    .blog-more h2,
+    .blog-more ul {
+      grid-column: 1;
+    }
+
+    .blog-authors {
+      grid-row: auto;
+      margin: 8px 0 28px;
+    }
+
+    .blog-title {
+      padding: 0;
+      font-size: clamp(32px, 8vw, 44px);
+      line-height: 1.15;
+    }
+
+    .blog-meta {
+      padding-right: 0;
+    }
+
+    .blog-body :global(.blog-p),
+    .blog-body :global(.blog-quote),
+    .blog-body :global(.blog-h2),
+    .blog-body :global(.blog-h3),
+    .blog-body :global(.blog-list),
+    .blog-more h2,
+    .blog-more ul {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .blog-body :global(.blog-list) {
+      padding-left: 1.25em;
+    }
+
+    .blog-body :global(.blog-h2),
+    .blog-body :global(.blog-h3),
+    .blog-more h2 {
+      font-size: 28px;
+      line-height: 1.3;
+    }
+  }
+
+  @media (max-width: 800px) {
+    .blog {
+      padding: 104px 0 72px;
+    }
+
+    .blog-container {
+      width: calc(100% - 48px);
+    }
+  }
+</style>

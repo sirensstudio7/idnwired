@@ -354,16 +354,16 @@ const logos = [
   window.visualViewport?.addEventListener("resize", fitHeroToScreen);
 
   const header = document.querySelector("#hero .site-header");
-  const lightSections = new Set(["about", "services", "impact", "why", "faq"]);
+  const darkSections = new Set(["hero", "cta"]);
 
   function onScroll() {
     if (!header) return;
     const probe = header.getBoundingClientRect().bottom + 12;
-    const section = [...document.querySelectorAll("main > section")].find((el) => {
+    const section = [...document.querySelectorAll("main > section, #cta")].find((el) => {
       const box = el.getBoundingClientRect();
       return box.top <= probe && box.bottom > probe;
     });
-    header.classList.toggle("is-on-light", lightSections.has(section?.id ?? ""));
+    header.classList.toggle("is-on-light", Boolean(section) && !darkSections.has(section.id));
   }
 
   onScroll();

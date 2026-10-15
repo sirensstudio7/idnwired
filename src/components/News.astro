@@ -1,0 +1,586 @@
+---
+import { agency } from "../data/creators";
+import { getHomepageNewsItems } from "../lib/news/catalog";
+
+const { headline, intro } = agency.news;
+const items = await getHomepageNewsItems();
+---
+
+{items.length > 0 ? (
+<section class="events" id="news" aria-labelledby="events-heading">
+  <div class="events-inner wrap">
+    <header class="events-header">
+      <div class="events-header__content">
+        <h2 class="events-heading" id="events-heading">{headline}</h2>
+        <p class="events-heading events-heading--sub">{intro}</p>
+      </div>
+      <div class="events-header__actions">
+        <a class="events-btn" href="/news">See all articles</a>
+        <div class="events-controls" role="group" aria-label="Carousel navigation">
+          <button type="button" class="events-nav" data-events-prev aria-label="Previous slide">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" aria-hidden="true">
+              <path d="M9.613 2.62 5.107 7.124h9.137v1.75H5.107l4.506 4.506-1.238 1.238-6-6L1.756 8l.619-.62 6-6 1.238 1.24Z"></path>
+            </svg>
+          </button>
+          <button type="button" class="events-nav" data-events-next aria-label="Next slide">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" aria-hidden="true">
+              <path d="m6.387 2.62 4.506 4.505H1.756v1.75h9.137l-4.506 4.506 1.238 1.238 6-6L14.245 8l-.618-.62-6-6-1.239 1.24Z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="events-desktop" data-events-desktop style={`--events-count:${items.length}`}>
+      <div class="events-squeezy" data-events-squeezy>
+        <div class="events-squeezy-track" data-events-squeezy-track>
+          {
+            items.map((item, index) => (
+              <button
+                type="button"
+                class:list={["events-panel", { "is-active": index === 0 }]}
+                data-events-panel
+                aria-label={item.title}
+                aria-current={index === 0 ? "true" : undefined}
+              >
+                <img
+                  src={item.image}
+                  alt=""
+                  width={960}
+                  height={600}
+                  loading="eager"
+                  decoding="async"
+                />
+              </button>
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="events-details">
+        <div class="events-details-track" data-events-track>
+          {
+            items.map((item, index) => (
+              <div
+                class="events-detail"
+                data-events-detail
+                aria-hidden={index === 0 ? "false" : "true"}
+              >
+                <div class="events-detail__copy">
+                  <div class="events-detail__headline">
+                    <h3 class="events-line">{item.title}</h3>
+                    {item.category ? <p class="events-cat">{item.category}</p> : null}
+                  </div>
+                  <p class="events-line events-line--sub">{item.excerpt}</p>
+                </div>
+                <a
+                  class="events-btn"
+                  href={item.href ?? "/start"}
+                  tabindex={index === 0 ? 0 : -1}
+                >
+                  {item.cta}
+                  <svg width="5" height="8" viewBox="0 0.5 5 8" fill="none" aria-hidden="true">
+                    <path
+                      d="M4.848 3.634 5.459 4.25 4.848 4.866 1.242 8.499 0 7.267 2.993 4.249 0 1.232 1.242 0 4.848 3.634Z"
+                      fill="currentColor"></path>
+                  </svg>
+                </a>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+
+    <ul class="events-mobile" data-events-mobile>
+      {
+        items.map((item) => (
+          <li>
+            <article class="events-mcard">
+              <div class="events-mcard__media">
+                <img
+                  src={item.image}
+                  alt={item.imageAlt}
+                  width={672}
+                  height={700}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <p class="events-mcard__copy">
+                <span class="events-mcard__title">{item.title}</span>{" "}
+                <span class="events-mcard__sub">{item.excerpt}</span>
+              </p>
+              <a class="events-btn" href={item.href ?? "/start"}>
+                {item.cta}
+                <svg width="5" height="8" viewBox="0 0.5 5 8" fill="none" aria-hidden="true">
+                  <path
+                    d="M4.848 3.634 5.459 4.25 4.848 4.866 1.242 8.499 0 7.267 2.993 4.249 0 1.232 1.242 0 4.848 3.634Z"
+                    fill="currentColor"></path>
+                </svg>
+              </a>
+            </article>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="sr-only" aria-live="polite" data-events-live></p>
+  </div>
+</section>
+) : null}
+
+<script>
+  function initEventsCarousel() {
+    const root = document.querySelector("[data-events-desktop]");
+    if (!root || root.getAttribute("data-bound") === "1") return;
+    root.setAttribute("data-bound", "1");
+
+    const panels = [...root.querySelectorAll("[data-events-panel]")] as HTMLButtonElement[];
+    const details = [...root.querySelectorAll("[data-events-detail]")] as HTMLElement[];
+    const squeezyTrack = root.querySelector("[data-events-squeezy-track]") as HTMLElement | null;
+    const track = root.querySelector("[data-events-track]") as HTMLElement | null;
+    const prev = document.querySelector("[data-events-prev]") as HTMLButtonElement | null;
+    const next = document.querySelector("[data-events-next]") as HTMLButtonElement | null;
+    const live = document.querySelector("[data-events-live]");
+    if (panels.length === 0 || !squeezyTrack) return;
+
+    let index = 0;
+    let animating = false;
+    const titles = details.map((el) => el.querySelector(".events-line")?.textContent ?? "");
+
+    const stepPx = () => {
+      const styles = getComputedStyle(root);
+      const sliver = parseFloat(styles.getPropertyValue("--events-sliver")) || 48;
+      const gap = parseFloat(styles.getPropertyValue("--events-gap")) || 8;
+      return sliver + gap;
+    };
+
+    const applyOrder = (activeIndex: number) => {
+      panels.forEach((panel, i) => {
+        const order = (i - activeIndex + panels.length) % panels.length;
+        panel.style.order = String(order);
+        const on = i === activeIndex;
+        panel.classList.toggle("is-active", on);
+        if (on) panel.setAttribute("aria-current", "true");
+        else panel.removeAttribute("aria-current");
+      });
+    };
+
+    const syncDetails = () => {
+      if (track) track.style.transform = `translateX(-${index * 100}%)`;
+      details.forEach((el, i) => {
+        const on = i === index;
+        el.setAttribute("aria-hidden", on ? "false" : "true");
+        const link = el.querySelector("a");
+        if (link) link.tabIndex = on ? 0 : -1;
+      });
+      if (live) live.textContent = `Item ${index + 1} of ${panels.length}: ${titles[index]}`;
+    };
+
+    const clearGhosts = () => {
+      squeezyTrack.querySelectorAll("[data-events-ghost]").forEach((node) => node.remove());
+    };
+
+    const placeGhost = (source: HTMLButtonElement, order: number) => {
+      const ghost = source.cloneNode(true) as HTMLButtonElement;
+      ghost.removeAttribute("data-events-panel");
+      ghost.removeAttribute("aria-current");
+      ghost.removeAttribute("aria-label");
+      ghost.setAttribute("data-events-ghost", "");
+      ghost.setAttribute("aria-hidden", "true");
+      ghost.tabIndex = -1;
+      ghost.classList.remove("is-active");
+      ghost.style.order = String(order);
+      const img = ghost.querySelector("img");
+      if (img) img.loading = "eager";
+      squeezyTrack.appendChild(ghost);
+    };
+
+    const settle = () => {
+      squeezyTrack.classList.remove("is-animating");
+      squeezyTrack.style.transition = "none";
+      squeezyTrack.style.transform = "translateX(0)";
+      applyOrder(index);
+      clearGhosts();
+      void squeezyTrack.offsetWidth;
+      squeezyTrack.style.transition = "";
+      animating = false;
+    };
+
+    const go = (nextIndex: number) => {
+      const n = panels.length;
+      const target = (nextIndex + n) % n;
+      if (target === index || animating) return;
+
+      const forward = (target - index + n) % n;
+      const goingNext = forward <= n - forward;
+
+      if (forward !== 1 && forward !== n - 1) {
+        index = target;
+        applyOrder(index);
+        syncDetails();
+        return;
+      }
+
+      animating = true;
+      const delta = stepPx();
+      let done = false;
+      const end = () => {
+        if (done) return;
+        done = true;
+        squeezyTrack.removeEventListener("transitionend", onEnd);
+        settle();
+      };
+      const onEnd = (event: TransitionEvent) => {
+        if (event.target !== squeezyTrack || event.propertyName !== "transform") return;
+        end();
+      };
+
+      if (goingNext) {
+        const from = index;
+        index = target;
+        clearGhosts();
+        placeGhost(panels[from], n);
+        panels.forEach((panel, i) => {
+          panel.style.order = String((i - from + n) % n);
+          const on = i === target;
+          panel.classList.toggle("is-active", on);
+          if (on) panel.setAttribute("aria-current", "true");
+          else panel.removeAttribute("aria-current");
+        });
+        syncDetails();
+        squeezyTrack.classList.add("is-animating");
+        squeezyTrack.style.transform = `translateX(-${delta}px)`;
+      } else {
+        const from = index;
+        squeezyTrack.classList.remove("is-animating");
+        squeezyTrack.style.transition = "none";
+        panels.forEach((panel, i) => {
+          panel.style.order = String((i - target + n) % n);
+          panel.classList.toggle("is-active", i === from);
+        });
+        squeezyTrack.style.transform = `translateX(-${delta}px)`;
+        void squeezyTrack.offsetWidth;
+        index = target;
+        applyOrder(index);
+        syncDetails();
+        squeezyTrack.style.transition = "";
+        squeezyTrack.classList.add("is-animating");
+        squeezyTrack.style.transform = "translateX(0)";
+      }
+
+      squeezyTrack.addEventListener("transitionend", onEnd);
+      window.setTimeout(end, 650);
+    };
+
+    prev?.addEventListener("click", () => go(index - 1));
+    next?.addEventListener("click", () => go(index + 1));
+    panels.forEach((panel, i) => panel.addEventListener("click", () => go(i)));
+
+    applyOrder(0);
+    syncDetails();
+  }
+
+  initEventsCarousel();
+  document.addEventListener("astro:page-load", initEventsCarousel);
+</script>
+
+<style>
+  .events {
+    --events-ink: #0a2540;
+    --events-muted: #62748c;
+    scroll-margin-top: 88px;
+    padding: 96px 0 112px;
+    font-family: "Sora", var(--sans);
+    color: var(--events-ink);
+    background: #fff;
+  }
+
+  .events-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 28px;
+  }
+
+  .events-heading {
+    margin: 0;
+    font-size: clamp(28px, 3.8vw, 40px);
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: -0.035em;
+  }
+
+  .events-heading--sub {
+    color: var(--events-muted);
+  }
+
+  .events-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+    padding-top: 8px;
+  }
+
+  .events-controls {
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+
+  .events-nav {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--events-ink);
+    cursor: pointer;
+  }
+
+  .events-nav:hover {
+    background: rgba(10, 37, 64, 0.06);
+  }
+
+  .events-desktop {
+    --events-sliver: 48px;
+    --events-gap: 8px;
+    --events-active-w: calc(
+      100% - (var(--events-count, 6) - 1) * (var(--events-sliver) + var(--events-gap))
+    );
+  }
+
+  .events-squeezy {
+    overflow: clip;
+    height: min(36vw, 380px);
+  }
+
+  .events-squeezy-track {
+    display: flex;
+    gap: var(--events-gap);
+    width: 100%;
+    height: 100%;
+  }
+
+  .events-squeezy-track.is-animating {
+    transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .events-panel {
+    flex: 0 0 var(--events-sliver);
+    width: var(--events-sliver);
+    min-width: var(--events-sliver);
+    padding: 0;
+    border: 0;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #e6ebf1;
+    cursor: pointer;
+    transition:
+      flex-basis 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+      width 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .events-panel.is-active {
+    flex: 0 0 var(--events-active-w);
+    width: var(--events-active-w);
+    min-width: 0;
+    cursor: default;
+  }
+
+  .events-panel[data-events-ghost] {
+    pointer-events: none;
+  }
+
+  .events-panel img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .events-details {
+    overflow: clip;
+    margin-top: 22px;
+  }
+
+  .events-details-track {
+    display: flex;
+    width: 100%;
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .events-detail {
+    box-sizing: border-box;
+    flex: 0 0 100%;
+    min-width: 100%;
+    max-width: 100%;
+    display: grid;
+    grid-template-columns: var(--events-active-w) 1fr;
+    align-items: end;
+    column-gap: 24px;
+  }
+
+  .events-detail__copy {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .events-detail__headline {
+    display: block;
+  }
+
+  .events-detail__headline .events-line {
+    display: inline;
+    width: auto;
+  }
+
+  .events-cat {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: 0.15em;
+    margin: 0 0 0 8px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(10, 37, 64, 0.06);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    color: var(--events-ink);
+  }
+
+  .events-detail .events-btn {
+    grid-column: 2;
+    justify-self: end;
+    align-self: end;
+  }
+
+  .events-line {
+    display: block;
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: -0.025em;
+  }
+
+  .events-line--sub {
+    margin-top: 6px;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.55;
+    letter-spacing: -0.02em;
+    color: var(--events-muted);
+  }
+
+  .events-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 0 14px;
+    border: 1px solid rgba(10, 37, 64, 0.12);
+    border-radius: 6px;
+    background: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--events-ink);
+    text-decoration: none;
+    box-shadow: 0 1px 1px rgba(10, 37, 64, 0.04);
+  }
+
+  .events-btn:hover {
+    background: #f6f9fc;
+  }
+
+  .events-mobile {
+    display: none;
+    gap: 14px;
+    margin: 0;
+    padding: 0 0 8px;
+    list-style: none;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .events-mobile::-webkit-scrollbar {
+    display: none;
+  }
+
+  .events-mobile li {
+    flex: 0 0 min(78vw, 320px);
+    scroll-snap-align: start;
+  }
+
+  .events-mcard {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .events-mcard__media {
+    overflow: hidden;
+    border-radius: 16px;
+    aspect-ratio: 4 / 5;
+    background: #e6ebf1;
+  }
+
+  .events-mcard__media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .events-mcard__copy {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.45;
+    letter-spacing: -0.02em;
+  }
+
+  .events-mcard__title {
+    font-weight: 500;
+    color: var(--events-ink);
+  }
+
+  .events-mcard__sub {
+    font-weight: 400;
+    color: var(--events-muted);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
+
+  @media (max-width: 800px) {
+    .events {
+      padding: 72px 0 88px;
+    }
+
+    .events-desktop,
+    .events-controls {
+      display: none;
+    }
+
+    .events-mobile {
+      display: flex;
+    }
+  }
+</style>

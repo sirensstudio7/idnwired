@@ -1,0 +1,22 @@
+---
+import HeroIcon, { type HeroIconName } from "./HeroIcon.astro";
+
+interface Props {
+  label: string;
+  icon: HeroIconName;
+}
+
+const { label, icon } = Astro.props;
+---
+
+<div class="admin-detail-row">
+  <span class="admin-detail-row__icon">
+    <HeroIcon name={icon} />
+  </span>
+  <div class="admin-detail-row__body">
+    <dt>{label}</dt>
+    <dd>
+      <slot />
+    </dd>
+  </div>
+</div>

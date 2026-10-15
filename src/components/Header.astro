@@ -38,3 +38,32 @@ const links = [
     </span>
   </button>
 </header>
+
+<script>
+  function bindInnerHeaderScroll() {
+    const header = document.querySelector(".site-header");
+    if (!(header instanceof HTMLElement) || header.closest("#hero")) return;
+    if (header.dataset.scrollBound === "1") return;
+    header.dataset.scrollBound = "1";
+
+    const sync = () => {
+      const probe = header.getBoundingClientRect().bottom + 12;
+      const cta = document.getElementById("cta");
+      const overFooter = Boolean(
+        cta &&
+          cta.getBoundingClientRect().top <= probe &&
+          cta.getBoundingClientRect().bottom > probe,
+      );
+
+      header.classList.toggle("is-over-footer", overFooter);
+      header.classList.toggle("is-on-light", !overFooter && window.scrollY > 24);
+    };
+
+    sync();
+    window.addEventListener("scroll", sync, { passive: true });
+    window.addEventListener("resize", sync);
+  }
+
+  bindInnerHeaderScroll();
+  document.addEventListener("astro:page-load", bindInnerHeaderScroll);
+</script>

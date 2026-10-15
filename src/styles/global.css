@@ -86,12 +86,15 @@ body:has(#hero) {
 
 body.page-home main,
 body:has(#hero) main,
-body.page-network main {
+body.page-network main,
+body.page-start main {
   margin: 0;
   padding: 0;
 }
 
-body.page-network {
+body.page-network,
+body.page-start,
+body.page-news-article {
   overflow-x: clip;
 }
 
@@ -136,19 +139,45 @@ body:has(#hero) #hero .site-header {
   backdrop-filter: none;
   border: 0;
   padding: 28px 56px 14px;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
 }
 
-body.page-network .site-header {
+body.page-network .site-header,
+body.page-start .site-header,
+body.page-news-article .site-header {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 50;
+  color: var(--ink);
+  background: #fff;
+  backdrop-filter: none;
+  border: 0;
   padding: 28px 56px 14px;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+body.page-network .site-header.is-over-footer,
+body.page-start .site-header.is-over-footer,
+body.page-news-article .site-header.is-over-footer {
+  color: #fff;
+  background: transparent;
+  backdrop-filter: none;
+  border: 0;
 }
 
 body.page-home #hero .site-header.is-on-light,
-body:has(#hero) #hero .site-header.is-on-light {
+body:has(#hero) #hero .site-header.is-on-light,
+body.page-network .site-header.is-on-light,
+body.page-start .site-header.is-on-light,
+body.page-news-article .site-header.is-on-light {
   color: var(--ink);
   background: #fff;
   backdrop-filter: blur(12px);
@@ -166,20 +195,43 @@ body:has(#hero) #hero .site-header.is-on-light {
 body.page-home .wordmark,
 body:has(#hero) .wordmark {
   color: #fff;
+  transition: color 0.2s ease;
+}
+
+body.page-network .site-header .wordmark,
+body.page-start .site-header .wordmark,
+body.page-news-article .site-header .wordmark {
+  color: var(--ink);
+  transition: color 0.2s ease;
+}
+
+body.page-network .site-header.is-over-footer .wordmark,
+body.page-start .site-header.is-over-footer .wordmark,
+body.page-news-article .site-header.is-over-footer .wordmark {
+  color: #fff;
 }
 
 body.page-home #hero .site-header.is-on-light .wordmark,
-body:has(#hero) #hero .site-header.is-on-light .wordmark {
+body:has(#hero) #hero .site-header.is-on-light .wordmark,
+body.page-network .site-header.is-on-light .wordmark,
+body.page-start .site-header.is-on-light .wordmark,
+body.page-news-article .site-header.is-on-light .wordmark {
   color: var(--ink);
 }
 
 body.page-home #hero .site-header.is-on-light .site-nav a,
-body:has(#hero) #hero .site-header.is-on-light .site-nav a {
+body:has(#hero) #hero .site-header.is-on-light .site-nav a,
+body.page-network .site-header.is-on-light .site-nav a,
+body.page-start .site-header.is-on-light .site-nav a,
+body.page-news-article .site-header.is-on-light .site-nav a {
   color: rgba(17, 18, 18, 0.75);
 }
 
 body.page-home #hero .site-header.is-on-light .site-nav a:hover,
-body:has(#hero) #hero .site-header.is-on-light .site-nav a:hover {
+body:has(#hero) #hero .site-header.is-on-light .site-nav a:hover,
+body.page-network .site-header.is-on-light .site-nav a:hover,
+body.page-start .site-header.is-on-light .site-nav a:hover,
+body.page-news-article .site-header.is-on-light .site-nav a:hover {
   color: var(--ink);
 }
 
@@ -208,10 +260,23 @@ body:has(#hero) #hero .site-header.is-on-light .site-nav a:hover {
 body.page-home #hero .site-nav a,
 body:has(#hero) #hero .site-nav a {
   color: rgba(255, 255, 255, 0.86);
+  transition: color 0.2s ease;
 }
 
 body.page-home #hero .site-nav a:hover,
 body:has(#hero) #hero .site-nav a:hover {
+  color: #fff;
+}
+
+body.page-network .site-header.is-over-footer .site-nav a,
+body.page-start .site-header.is-over-footer .site-nav a,
+body.page-news-article .site-header.is-over-footer .site-nav a {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+body.page-network .site-header.is-over-footer .site-nav a:hover,
+body.page-start .site-header.is-over-footer .site-nav a:hover,
+body.page-news-article .site-header.is-over-footer .site-nav a:hover {
   color: #fff;
 }
 
@@ -226,49 +291,98 @@ body:has(#hero) #hero .site-nav a:hover {
   height: 44px;
   margin-left: 8px;
   padding: 0 20px;
-  border: 1.5px solid rgba(17, 18, 18, 0.35);
+  border: 1.5px solid #635bff;
   border-radius: 100px;
-  color: var(--ink);
+  color: #fff;
   font-size: 15px;
   font-weight: 500;
   letter-spacing: -0.03em;
-  background: transparent;
+  background: #635bff;
   transition:
     background 0.2s ease,
     border-color 0.2s ease,
     color 0.2s ease;
 }
 
+.site-nav a.nav-lets-talk {
+  color: #fff;
+}
+
 .site-nav a.nav-lets-talk:hover,
 .nav-lets-talk:hover {
-  background: var(--ink);
-  border-color: var(--ink);
+  background: #524be8;
+  border-color: #524be8;
+  color: #fff;
+}
+
+body.page-network .site-header .site-nav a.nav-lets-talk,
+body.page-start .site-header .site-nav a.nav-lets-talk,
+body.page-news-article .site-header .site-nav a.nav-lets-talk {
+  border-color: #635bff;
+  background: #635bff;
+  color: #fff;
+}
+
+body.page-network .site-header .site-nav a.nav-lets-talk:hover,
+body.page-start .site-header .site-nav a.nav-lets-talk:hover,
+body.page-news-article .site-header .site-nav a.nav-lets-talk:hover {
+  background: #524be8;
+  border-color: #524be8;
   color: #fff;
 }
 
 body.page-home #hero .site-header .site-nav a.nav-lets-talk,
 body:has(#hero) #hero .site-header .site-nav a.nav-lets-talk {
-  border-color: rgba(255, 255, 255, 0.85);
-  color: #fff;
+  border-color: rgb(244, 193, 0);
+  background: linear-gradient(180deg, #fbe073 0%, #f9d12d 100%);
+  color: #282560;
+  box-shadow:
+    rgb(244, 193, 0) 0 0 0 1.5px,
+    rgba(0, 0, 0, 0.12) 0 4px 4px;
 }
 
 body.page-home #hero .site-header .site-nav a.nav-lets-talk:hover,
 body:has(#hero) #hero .site-header .site-nav a.nav-lets-talk:hover {
+  background: linear-gradient(180deg, #f5d45a 0%, #f0c61a 100%);
+  border-color: rgb(232, 180, 0);
+  color: #282560;
+}
+
+body.page-network .site-header.is-over-footer .site-nav a.nav-lets-talk,
+body.page-start .site-header.is-over-footer .site-nav a.nav-lets-talk,
+body.page-news-article .site-header.is-over-footer .site-nav a.nav-lets-talk {
+  border-color: rgba(255, 255, 255, 0.85);
+  background: transparent;
+  color: #fff;
+  box-shadow: none;
+}
+
+body.page-network .site-header.is-over-footer .site-nav a.nav-lets-talk:hover,
+body.page-start .site-header.is-over-footer .site-nav a.nav-lets-talk:hover,
+body.page-news-article .site-header.is-over-footer .site-nav a.nav-lets-talk:hover {
   background: rgba(255, 255, 255, 0.16);
   border-color: #fff;
   color: #fff;
 }
 
 body.page-home #hero .site-header.is-on-light .site-nav a.nav-lets-talk,
-body:has(#hero) #hero .site-header.is-on-light .site-nav a.nav-lets-talk {
-  border-color: rgba(17, 18, 18, 0.35);
-  color: var(--ink);
+body:has(#hero) #hero .site-header.is-on-light .site-nav a.nav-lets-talk,
+body.page-network .site-header.is-on-light .site-nav a.nav-lets-talk,
+body.page-start .site-header.is-on-light .site-nav a.nav-lets-talk,
+body.page-news-article .site-header.is-on-light .site-nav a.nav-lets-talk {
+  border-color: #635bff;
+  background: #635bff;
+  color: #fff;
+  box-shadow: none;
 }
 
 body.page-home #hero .site-header.is-on-light .site-nav a.nav-lets-talk:hover,
-body:has(#hero) #hero .site-header.is-on-light .site-nav a.nav-lets-talk:hover {
-  background: var(--ink);
-  border-color: var(--ink);
+body:has(#hero) #hero .site-header.is-on-light .site-nav a.nav-lets-talk:hover,
+body.page-network .site-header.is-on-light .site-nav a.nav-lets-talk:hover,
+body.page-start .site-header.is-on-light .site-nav a.nav-lets-talk:hover,
+body.page-news-article .site-header.is-on-light .site-nav a.nav-lets-talk:hover {
+  background: #524be8;
+  border-color: #524be8;
   color: #fff;
 }
 
@@ -748,7 +862,9 @@ body.menu-locked {
 
   body.page-home #hero .site-header,
   body:has(#hero) #hero .site-header,
-  body.page-network .site-header {
+  body.page-network .site-header,
+  body.page-start .site-header,
+  body.page-news-article .site-header {
     padding: 20px 24px 14px;
   }
 
@@ -774,24 +890,36 @@ body.menu-locked {
   }
 
   body.page-home .site-header .menu-trigger,
-  body:has(#hero) .site-header .menu-trigger {
+  body:has(#hero) .site-header .menu-trigger,
+  body.page-network .site-header.is-over-footer .menu-trigger,
+  body.page-start .site-header.is-over-footer .menu-trigger,
+  body.page-news-article .site-header.is-over-footer .menu-trigger {
     color: #fff;
     background: transparent;
     border: none;
   }
 
   body.page-home .site-header .menu-trigger-bars span,
-  body:has(#hero) .site-header .menu-trigger-bars span {
+  body:has(#hero) .site-header .menu-trigger-bars span,
+  body.page-network .site-header.is-over-footer .menu-trigger-bars span,
+  body.page-start .site-header.is-over-footer .menu-trigger-bars span,
+  body.page-news-article .site-header.is-over-footer .menu-trigger-bars span {
     background: #fff;
   }
 
   body.page-home .site-header.is-on-light .menu-trigger,
-  body:has(#hero) .site-header.is-on-light .menu-trigger {
+  body:has(#hero) .site-header.is-on-light .menu-trigger,
+  body.page-network .site-header.is-on-light .menu-trigger,
+  body.page-start .site-header.is-on-light .menu-trigger,
+  body.page-news-article .site-header.is-on-light .menu-trigger {
     color: var(--ink);
   }
 
   body.page-home .site-header.is-on-light .menu-trigger-bars span,
-  body:has(#hero) .site-header.is-on-light .menu-trigger-bars span {
+  body:has(#hero) .site-header.is-on-light .menu-trigger-bars span,
+  body.page-network .site-header.is-on-light .menu-trigger-bars span,
+  body.page-start .site-header.is-on-light .menu-trigger-bars span,
+  body.page-news-article .site-header.is-on-light .menu-trigger-bars span {
     background: var(--ink);
   }
 
@@ -838,7 +966,9 @@ body.menu-locked {
 
   body.page-home #hero .site-header,
   body:has(#hero) #hero .site-header,
-  body.page-network .site-header {
+  body.page-network .site-header,
+  body.page-start .site-header,
+  body.page-news-article .site-header {
     padding: 16px 24px 12px;
   }
 

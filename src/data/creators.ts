@@ -1,3 +1,5 @@
+import { newsItems } from "./news";
+
 export type Accent = "cyan" | "ink" | "pink" | "yellow";
 
 export interface Series {
@@ -248,6 +250,13 @@ export const agency = {
       },
     ],
   },
+  news: {
+    kicker: "From the wire",
+    headline: "What’s happening",
+    intro: "See the latest from IDNWIRED.",
+    cta: { label: "Start your campaign", href: "/start" },
+    items: newsItems,
+  },
   whyUs: {
     kicker: "Why Us",
     headline: "Built by People Who Know the Newsroom",
@@ -317,7 +326,7 @@ export const agency = {
       "where the country reads it?",
     ],
     button: "Start Your Project",
-    href: "#why",
+    href: "/start",
   },
   footer: {
     copyright: "© {year} Indonesia News Wire. All rights reserved.",
@@ -325,6 +334,8 @@ export const agency = {
       {
         title: "Main",
         links: [
+          { href: "/start", label: "Start a project" },
+          { href: "/news", label: "News" },
           { href: "/#services", label: "Services" },
           { href: "/#about", label: "About" },
           { href: "/#how-it-works", label: "How it works" },

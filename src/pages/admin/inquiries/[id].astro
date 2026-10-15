@@ -1,0 +1,291 @@
+---
+export const prerender = false;
+
+import AdminDetailRow from "../../../components/admin/AdminDetailRow.astro";
+import AdminShell from "../../../components/admin/AdminShell.astro";
+import HeroIcon from "../../../components/admin/HeroIcon.astro";
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import {
+  BUDGET_BANDS,
+  INQUIRY_STATUSES,
+  companySectorLabel,
+  parseTargetsStored,
+} from "../../../lib/inquiries/schema";
+import { requireAdminUser } from "../../../lib/supabase/server";
+
+const { supabase, user } = await requireAdminUser(Astro.cookies);
+if (!user) {
+  return Astro.redirect("/admin/login");
+}
+
+const { id } = Astro.params;
+if (!id) {
+  return Astro.redirect("/admin");
+}
+
+const { data: inquiry, error } = await supabase
+  .from("project_inquiries")
+  .select("*")
+  .eq("id", id)
+  .maybeSingle();
+
+if (error || !inquiry) {
+  return Astro.redirect("/admin");
+}
+
+const budgetLabel =
+  BUDGET_BANDS.find((b) => b.value === inquiry.budget_band)?.label ??
+  inquiry.budget_band ??
+  "—";
+
+function formatSubmitted(iso: string) {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(iso));
+}
+
+const SOURCE_LABELS: Record<string, string> = {
+  footer_cta: "Website form",
+};
+
+function formatSource(source: string) {
+  return SOURCE_LABELS[source] ?? source.replace(/_/g, " ");
+}
+
+function statusLabel(status: string) {
+  return status.charAt(0).toUpperCase() + status.slice(1);
+}
+
+const parsedTargets = parseTargetsStored(inquiry.targets);
+---
+
+<AdminLayout title={inquiry.company_name}>
+  <AdminShell userEmail={user.email}>
+    <nav class="admin-breadcrumb" aria-label="Breadcrumb">
+      <a href="/admin">Inbox</a>
+      <span aria-hidden="true">/</span>
+      {inquiry.company_name}
+    </nav>
+
+    <div class="admin-card admin-detail-hero">
+      <div class="admin-detail-hero__intro">
+        <div class="admin-detail-hero__title-row">
+          <h1 class="admin-detail-hero__title">{inquiry.company_name}</h1>
+          <span class={`admin-badge admin-badge--${inquiry.status}`} id="status-badge">
+            {statusLabel(inquiry.status)}
+          </span>
+        </div>
+        <ul class="admin-detail-hero__facts" aria-label="Submission details">
+          <li class="admin-detail-hero__fact">
+            <HeroIcon name="clock" />
+            <time datetime={inquiry.created_at}>{formatSubmitted(inquiry.created_at)}</time>
+          </li>
+          <li class="admin-detail-hero__fact">
+            <HeroIcon name="tag" />
+            <span>{formatSource(inquiry.source)}</span>
+          </li>
+        </ul>
+      </div>
+      <div class="admin-detail-hero__actions">
+        <div class="admin-custom-select admin-detail-hero__status" data-admin-status-select>
+          <input type="hidden" id="status-value" value={inquiry.status} />
+          <button
+            type="button"
+            class="admin-custom-select__trigger"
+            id="status-select-trigger"
+            aria-label="Update status"
+            aria-haspopup="listbox"
+            aria-expanded="false"
+          >
+            <span data-status-label>{statusLabel(inquiry.status)}</span>
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path
+                d="M6 8l4 4 4-4"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+            </svg>
+          </button>
+          <ul class="admin-custom-select__menu" role="listbox" aria-label="Status" hidden>
+            {
+              INQUIRY_STATUSES.map((s) => (
+                <li role="presentation">
+                  <button
+                    type="button"
+                    class="admin-custom-select__option"
+                    role="option"
+                    data-value={s}
+                    aria-selected={inquiry.status === s}
+                  >
+                    {statusLabel(s)}
+                  </button>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+        <p class="admin-status-msg" id="status-msg" hidden></p>
+      </div>
+    </div>
+
+    <div class="admin-detail-grid">
+      <section class="admin-card admin-detail-block">
+        <h2>Contact</h2>
+        <dl>
+          <AdminDetailRow label="Sector" icon="building-office">
+            {companySectorLabel(inquiry.company_sector)}
+          </AdminDetailRow>
+          <AdminDetailRow label="Name" icon="user">{inquiry.contact_name}</AdminDetailRow>
+          <AdminDetailRow label="Email" icon="envelope">
+            <a href={`mailto:${inquiry.email}`}>{inquiry.email}</a>
+          </AdminDetailRow>
+          <AdminDetailRow label="Phone" icon="phone">{inquiry.phone ?? "—"}</AdminDetailRow>
+          <AdminDetailRow label="Website" icon="globe-alt">
+            {
+              inquiry.website ? (
+                <a href={inquiry.website} target="_blank" rel="noopener noreferrer">
+                  {inquiry.website}
+                </a>
+              ) : (
+                "—"
+              )
+            }
+          </AdminDetailRow>
+        </dl>
+      </section>
+
+      <section class="admin-card admin-detail-block">
+        <h2>Campaign</h2>
+        <dl>
+          {
+            parsedTargets.legacy ? (
+              <AdminDetailRow label="Targets" icon="map-pin">
+                {inquiry.targets ?? "—"}
+              </AdminDetailRow>
+            ) : (
+              <>
+                <AdminDetailRow label="Cities" icon="map-pin">
+                  {parsedTargets.cities ?? "—"}
+                </AdminDetailRow>
+                <AdminDetailRow label="Niche & audience" icon="users">
+                  {parsedTargets.niche ?? "—"}
+                </AdminDetailRow>
+              </>
+            )
+          }
+          <AdminDetailRow label="Timeline" icon="calendar-days">
+            {inquiry.launch_date ?? "—"}
+          </AdminDetailRow>
+          <AdminDetailRow label="Budget" icon="banknotes">{budgetLabel}</AdminDetailRow>
+        </dl>
+      </section>
+    </div>
+
+    <section class="admin-card admin-detail-prose">
+      <h2 class="admin-detail-prose__heading">
+        <span class="admin-detail-prose__heading-icon" aria-hidden="true">
+          <HeroIcon name="document-text" />
+        </span>
+        Project details
+      </h2>
+      <p>{inquiry.project_details}</p>
+    </section>
+  </AdminShell>
+</AdminLayout>
+
+<script define:vars={{ inquiryId: inquiry.id }}>
+  const root = document.querySelector("[data-admin-status-select]");
+  const msg = document.getElementById("status-msg");
+  const badge = document.getElementById("status-badge");
+
+  if (root) {
+    const trigger = root.querySelector(".admin-custom-select__trigger");
+    const menu = root.querySelector(".admin-custom-select__menu");
+    const hidden = document.getElementById("status-value");
+    const label = root.querySelector("[data-status-label]");
+    const options = root.querySelectorAll(".admin-custom-select__option");
+
+    const close = () => {
+      if (menu) menu.hidden = true;
+      trigger?.setAttribute("aria-expanded", "false");
+    };
+
+    const open = () => {
+      if (menu) menu.hidden = false;
+      trigger?.setAttribute("aria-expanded", "true");
+    };
+
+    const setUi = (status, labelText) => {
+      if (hidden) hidden.value = status;
+      if (label) label.textContent = labelText;
+      options.forEach((opt) => {
+        const value = opt.getAttribute("data-value");
+        opt.setAttribute("aria-selected", value === status ? "true" : "false");
+      });
+      if (badge) {
+        badge.textContent = labelText;
+        badge.className = `admin-badge admin-badge--${status}`;
+      }
+    };
+
+    trigger?.addEventListener("click", () => {
+      if (menu?.hidden) open();
+      else close();
+    });
+
+    options.forEach((opt) => {
+      opt.addEventListener("click", async () => {
+        const status = opt.getAttribute("data-value");
+        const labelText = opt.textContent?.trim() ?? status;
+        if (!status || !hidden) return;
+
+        const previous = hidden.value;
+        if (status === previous) {
+          close();
+          return;
+        }
+
+        setUi(status, labelText);
+        close();
+        msg?.setAttribute("hidden", "");
+        trigger?.setAttribute("disabled", "true");
+
+        const res = await fetch(`/api/admin/inquiries/${inquiryId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status }),
+          credentials: "same-origin",
+        });
+
+        trigger?.removeAttribute("disabled");
+
+        if (res.ok) {
+          if (msg) {
+            msg.textContent = "Status updated.";
+            msg.removeAttribute("hidden");
+          }
+          return;
+        }
+
+        setUi(previous, previous.charAt(0).toUpperCase() + previous.slice(1));
+        if (msg) {
+          msg.textContent = "Could not save.";
+          msg.removeAttribute("hidden");
+        }
+      });
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!root.contains(event.target)) close();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") close();
+    });
+  }
+</script>

@@ -1,0 +1,76 @@
+---
+import "@fontsource-variable/geist/index.css";
+import "../styles/admin.css";
+
+interface Props {
+  title: string;
+  bare?: boolean;
+}
+
+const { title, bare = false } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{title} — IDNWIRED Admin</title>
+    {
+      bare ? (
+        <>
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+          <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@400;500;600&display=swap"
+            rel="stylesheet"
+          />
+        </>
+      ) : null
+    }
+    <slot name="head" />
+  </head>
+  <body class:list={[bare && "admin-bare", !bare && "admin-body"]}>
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --sans: "Geist Variable", system-ui, sans-serif;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+  }
+
+  body.admin-bare {
+    --ink: #111212;
+    --muted: #6b6e6e;
+    --sans: "Inter", system-ui, sans-serif;
+    font-family: var(--sans);
+    color: var(--ink);
+    background: #fff;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body.admin-body {
+    overflow-x: hidden;
+    font-family: var(--sans);
+    font-optical-sizing: auto;
+    color: #272666;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  a {
+    color: inherit;
+  }
+</style>

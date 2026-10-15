@@ -1,0 +1,56 @@
+---
+interface Option {
+  value: string;
+  label: string;
+}
+
+interface Props {
+  name: string;
+  label: string;
+  value: string;
+  options: Option[];
+}
+
+const { name, label, value, options } = Astro.props;
+const selected = options.find((option) => option.value === value) ?? options[0];
+const triggerId = `${name}-select-trigger`;
+---
+
+<div class="admin-custom-select" data-admin-custom-select>
+  <input type="hidden" name={name} value={selected?.value ?? ""} />
+  <button
+    type="button"
+    class="admin-custom-select__trigger"
+    id={triggerId}
+    aria-label={label}
+    aria-haspopup="listbox"
+    aria-expanded="false"
+  >
+    <span data-select-label>{selected?.label ?? ""}</span>
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path
+        d="M6 8l4 4 4-4"
+        stroke="currentColor"
+        stroke-width="1.75"
+        stroke-linecap="round"
+        stroke-linejoin="round"></path>
+    </svg>
+  </button>
+  <ul class="admin-custom-select__menu" role="listbox" aria-label={label} hidden>
+    {
+      options.map((option) => (
+        <li role="presentation">
+          <button
+            type="button"
+            class="admin-custom-select__option"
+            role="option"
+            data-value={option.value}
+            aria-selected={option.value === selected?.value}
+          >
+            {option.label}
+          </button>
+        </li>
+      ))
+    }
+  </ul>
+</div>

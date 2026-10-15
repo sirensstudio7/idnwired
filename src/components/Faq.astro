@@ -7,10 +7,7 @@ const [headlineOne, headlineTwo] = headline;
 
 <section class="faq wrap" id="faq">
   <header class="faq-head">
-    <p class="faq-chip">
-      <span class="faq-chip-dot" aria-hidden="true"></span>
-      {label}
-    </p>
+    <p class="faq-chip">{label}</p>
     <h2>
       <span>{headlineOne}</span>
       <span>{headlineTwo}</span>
@@ -199,20 +196,13 @@ const [headlineOne, headlineTwo] = headline;
 
   .faq-chip {
     display: inline-flex;
-    align-items: center;
-    gap: 10px;
     margin: 0;
+    padding: 8px 16px;
+    border: 1px solid rgba(39, 38, 102, 0.14);
+    border-radius: 100px;
     font-size: 14px;
-    font-weight: 500;
-    letter-spacing: -0.02em;
-    color: #282560;
-  }
-
-  .faq-chip-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #282560;
+    letter-spacing: -0.03em;
+    color: #747098;
   }
 
   .faq-head h2 {

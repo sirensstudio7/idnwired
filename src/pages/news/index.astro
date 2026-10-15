@@ -1,0 +1,794 @@
+---
+export const prerender = false;
+
+import CtaBanner from "../../components/CtaBanner.astro";
+import Header from "../../components/Header.astro";
+import MenuOverlay from "../../components/MenuOverlay.astro";
+import { getPublishedNewsItems } from "../../lib/news/catalog";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const items = await getPublishedNewsItems();
+const categories = [
+  ...new Set(items.map((item) => item.category).filter((category): category is string => Boolean(category))),
+].sort((a, b) => a.localeCompare(b));
+const requestedCategory = Astro.url.searchParams.get("category") ?? "all";
+const activeCategory = categories.includes(requestedCategory) ? requestedCategory : "all";
+const searchQuery = (Astro.url.searchParams.get("q") ?? "").trim();
+const origin = new URL(Astro.site ?? Astro.url).origin;
+const pageUrl = `${origin}/news`;
+const description =
+  "All published IDNWIRED desk stories — Indonesia media, distribution, and campaign analysis.";
+
+const collectionJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  name: "News — IDNWIRED",
+  description,
+  url: pageUrl,
+  inLanguage: "en",
+  isPartOf: {
+    "@type": "WebSite",
+    name: "IDNWIRED",
+    url: `${origin}/`,
+  },
+  mainEntity: {
+    "@type": "ItemList",
+    numberOfItems: items.length,
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      url: `${origin}${item.href}`,
+      name: item.title.replace(/\.$/, ""),
+    })),
+  },
+};
+
+const breadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: `${origin}/` },
+    { "@type": "ListItem", position: 2, name: "News", item: pageUrl },
+  ],
+};
+---
+
+<BaseLayout
+  title="News — IDNWIRED"
+  description={description}
+  bodyClass="page-news-article"
+  canonical="/news"
+  jsonLd={[collectionJsonLd, breadcrumbJsonLd]}
+>
+  <MenuOverlay />
+  <Header />
+
+  <main class="news-index">
+    <div
+      class="news-index__inner"
+      data-news-root
+      data-news-category={activeCategory}
+      data-news-view="list"
+    >
+      <div class="news-index__tools" role="search">
+        <label class="news-search">
+          <span class="sr-only">Search articles</span>
+          <span class="news-search__icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+              <circle cx="8.75" cy="8.75" r="5.5" stroke="currentColor" stroke-width="1.5"></circle>
+              <path d="M13.25 13.25 17 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+            </svg>
+          </span>
+          <input
+            type="search"
+            name="q"
+            value={searchQuery}
+            placeholder="Search articles…"
+            autocomplete="off"
+            spellcheck="false"
+            data-news-search
+          />
+        </label>
+
+        <div class="news-filter" data-news-category>
+          <button
+            type="button"
+            class="news-filter__trigger"
+            data-news-category-trigger
+            aria-haspopup="listbox"
+            aria-expanded="false"
+            aria-controls="news-category-listbox"
+          >
+            <span data-news-category-label>
+              {activeCategory === "all" ? "All categories" : activeCategory}
+            </span>
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path
+                d="M5 7.5 10 12.5 15 7.5"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+            </svg>
+          </button>
+          <ul
+            id="news-category-listbox"
+            class="news-filter__menu"
+            role="listbox"
+            aria-label="Filter by category"
+            data-news-category-menu
+            hidden
+          >
+            <li role="presentation">
+              <button
+                type="button"
+                role="option"
+                class:list={["news-filter__option", activeCategory === "all" && "is-selected"]}
+                data-news-category-option="all"
+                aria-selected={activeCategory === "all"}
+              >
+                All categories
+              </button>
+            </li>
+            {
+              categories.map((category) => (
+                <li role="presentation">
+                  <button
+                    type="button"
+                    role="option"
+                    class:list={["news-filter__option", activeCategory === category && "is-selected"]}
+                    data-news-category-option={category}
+                    aria-selected={activeCategory === category}
+                  >
+                    {category}
+                  </button>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+
+        <div class="news-view" role="group" aria-label="View">
+          <button type="button" class="news-view__btn is-active" data-news-view="list" aria-pressed="true">
+            <span class="sr-only">List view</span>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M2 3.5h12M2 8h12M2 12.5h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+            </svg>
+          </button>
+          <button type="button" class="news-view__btn" data-news-view="grid" aria-pressed="false">
+            <span class="sr-only">Grid view</span>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5"></rect>
+              <rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5"></rect>
+              <rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5"></rect>
+              <rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5"></rect>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="news-index__layout">
+        <section class="news-index__copy">
+          <header>
+            <h1>News</h1>
+          </header>
+          <p class="news-index__all-wrap">
+            <a class="news-index__all" href="/news" data-news-reset>
+              All news<span class="news-index__arrow" aria-hidden="true">
+                <svg width="10" height="10" viewBox="0 0 10 10">
+                  <g fill-rule="evenodd">
+                    <path class="news-index__arrow-line" d="M0 5h7"></path>
+                    <path class="news-index__arrow-tip" d="M1 1l4 4-4 4"></path>
+                  </g>
+                </svg>
+              </span>
+            </a>
+          </p>
+        </section>
+
+        {
+          items.length === 0 ? (
+            <p class="news-index__empty">No published stories yet.</p>
+          ) : (
+            <section class="news-index__list" aria-label="Published stories">
+              <p class="news-index__empty" data-news-empty hidden>
+                No stories match your search.
+              </p>
+              {items.map((item) => {
+                const titleText = item.title.replace(/\.$/, "");
+                const searchText = `${titleText} ${item.excerpt} ${item.category}`.toLowerCase();
+                return (
+                  <article
+                    class:list={["news-post", !item.image && "news-post--no-media"]}
+                    data-news-post
+                    data-category={item.category}
+                    data-search={searchText}
+                  >
+                    <header class="news-post__header">
+                      {item.category ? (
+                        <p class="news-post__cat">
+                          <a href={`/news?category=${encodeURIComponent(item.category)}`} data-news-category-link={item.category}>
+                            {item.category}
+                          </a>
+                        </p>
+                      ) : null}
+                      <h2 class="news-post__title">
+                        <a href={item.href}>{titleText}</a>
+                      </h2>
+                    </header>
+                    <time class="news-post__date" datetime={item.datetime}>
+                      <a href={item.href}>{item.dateLabel}</a>
+                    </time>
+                    {item.image ? (
+                      <figure class="news-post__figure">
+                        <a href={item.href} tabindex="-1" aria-hidden="true">
+                          <img
+                            src={item.image}
+                            alt=""
+                            width={312}
+                            height={196}
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        </a>
+                      </figure>
+                    ) : null}
+                  </article>
+                );
+              })}
+            </section>
+          )
+        }
+      </div>
+    </div>
+  </main>
+
+  <CtaBanner />
+</BaseLayout>
+
+<script>
+  import { initNewsIndex } from "../../scripts/news-index";
+
+  initNewsIndex();
+  document.addEventListener("astro:page-load", initNewsIndex);
+</script>
+
+<style>
+  .news-index {
+    --news-ink: #0a2540;
+    --news-muted: #425466;
+    --news-link: #635bff;
+    --news-line: #e6ecf2;
+    padding: 112px 0 96px;
+    font-family: Inter, "Helvetica Neue", Arial, var(--sans);
+    color: var(--news-ink);
+    background: #fff;
+  }
+
+  .news-index__inner {
+    width: calc(100% - 60px);
+    max-width: 1080px;
+    margin-inline: auto;
+  }
+
+  .news-index__tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  .news-search {
+    position: relative;
+    flex: 0 0 420px;
+    width: 420px;
+    max-width: 100%;
+  }
+
+  .news-search__icon {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    display: flex;
+    color: #8898aa;
+    pointer-events: none;
+    transform: translateY(-50%);
+  }
+
+  .news-search input {
+    width: 100%;
+    height: 36px;
+    margin: 0;
+    padding: 0 12px 0 36px;
+    border: 1px solid var(--news-line);
+    border-radius: 6px;
+    background: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    letter-spacing: 0.2px;
+    color: var(--news-ink);
+    outline: none;
+  }
+
+  .news-search input::placeholder {
+    color: #8898aa;
+  }
+
+  .news-search input:hover {
+    border-color: #cdd6e1;
+  }
+
+  .news-search input:focus-visible {
+    border-color: var(--news-link);
+    box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.16);
+  }
+
+  .news-filter {
+    position: relative;
+    flex: 0 0 140px;
+    width: 140px;
+    margin-left: auto;
+  }
+
+  .news-filter__trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    height: 36px;
+    margin: 0;
+    padding: 0 10px 0 12px;
+    border: 1px solid var(--news-line);
+    border-radius: 6px;
+    background: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.2px;
+    color: var(--news-ink);
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .news-filter__trigger span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .news-filter__trigger svg {
+    flex-shrink: 0;
+    color: #8898aa;
+    transition: transform 0.15s ease;
+  }
+
+  .news-filter.is-open .news-filter__trigger svg {
+    transform: rotate(180deg);
+  }
+
+  .news-filter__trigger:hover {
+    border-color: #cdd6e1;
+  }
+
+  .news-filter__trigger:focus-visible,
+  .news-filter.is-open .news-filter__trigger {
+    border-color: var(--news-link);
+    box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.16);
+  }
+
+  .news-filter__menu {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 6px);
+    right: 0;
+    left: 0;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    border: 1px solid var(--news-line);
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 10px 30px rgba(10, 37, 64, 0.1);
+  }
+
+  .news-filter__menu[hidden] {
+    display: none;
+  }
+
+  .news-filter__option {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    font-family: inherit;
+    font-size: 13px;
+    text-align: left;
+    color: var(--news-ink);
+    cursor: pointer;
+  }
+
+  .news-filter__option:hover {
+    background: #f6f9fc;
+  }
+
+  .news-filter__option.is-selected {
+    color: var(--news-link);
+    font-weight: 500;
+  }
+
+  .news-view {
+    display: inline-flex;
+    flex: 0 0 auto;
+    padding: 2px;
+    border: 1px solid var(--news-line);
+    border-radius: 6px;
+    background: #fff;
+  }
+
+  .news-view__btn {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: #8898aa;
+    cursor: pointer;
+  }
+
+  .news-view__btn:hover {
+    color: var(--news-ink);
+  }
+
+  .news-view__btn.is-active {
+    background: #f6f9fc;
+    color: var(--news-ink);
+  }
+
+  .news-view__btn:focus-visible {
+    outline: 2px solid var(--news-link);
+    outline-offset: 1px;
+  }
+
+  .news-index__layout {
+    display: grid;
+    grid-template-columns: minmax(120px, 180px) minmax(0, 1fr);
+    column-gap: 24px;
+    align-items: start;
+  }
+
+  .news-index__copy h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 500;
+    letter-spacing: -0.2px;
+    line-height: 1.2;
+  }
+
+  .news-index__all-wrap {
+    margin: 10px 0 0;
+  }
+
+  .news-index__all {
+    display: inline-flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+    color: var(--news-link);
+    text-decoration: none;
+  }
+
+  .news-index__all[data-news-reset] {
+    cursor: pointer;
+  }
+
+  .news-index__arrow {
+    display: inline-block;
+    margin-left: 6px;
+    position: relative;
+    top: 1px;
+  }
+
+  .news-index__arrow svg {
+    display: block;
+    overflow: visible;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.25;
+    stroke-linecap: round;
+  }
+
+  .news-index__arrow-line {
+    opacity: 0;
+    transform: translateX(-3px);
+    transition:
+      opacity 0.15s ease,
+      transform 0.15s ease;
+  }
+
+  .news-index__arrow-tip {
+    transform: translateX(0);
+    transition: transform 0.15s ease;
+  }
+
+  .news-index__all:hover .news-index__arrow-line,
+  .news-index__all:focus-visible .news-index__arrow-line {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .news-index__all:hover .news-index__arrow-tip,
+  .news-index__all:focus-visible .news-index__arrow-tip {
+    transform: translateX(3px);
+  }
+
+  .news-index__empty {
+    margin: 8px 0 0;
+    font-size: 16px;
+    color: var(--news-muted);
+  }
+
+  .news-index__list {
+    min-width: 0;
+  }
+
+  .news-post {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 156px;
+    grid-template-rows: auto 1fr;
+    column-gap: 20px;
+    padding: 20px 0;
+    border-top: 1px solid var(--news-line);
+  }
+
+  .news-post[hidden] {
+    display: none !important;
+  }
+
+  .news-post:first-child {
+    padding-top: 4px;
+    border-top: 0;
+  }
+
+  .news-post--no-media {
+    grid-template-columns: 1fr;
+  }
+
+  .news-post__header {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+  }
+
+  .news-post__cat {
+    margin: 0 0 4px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+    line-height: 20px;
+  }
+
+  .news-post__cat a {
+    color: var(--news-link);
+    text-decoration: none;
+  }
+
+  .news-post__title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: -0.2px;
+    line-height: 24px;
+  }
+
+  .news-post__title a {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .news-post__title a:hover,
+  .news-post__title a:focus-visible {
+    color: var(--news-link);
+  }
+
+  .news-post__date {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: end;
+    position: relative;
+    margin-top: 10px;
+    padding-left: 12px;
+    font-size: 13px;
+    font-weight: 300;
+    letter-spacing: 0.2px;
+    line-height: 20px;
+    color: var(--news-muted);
+  }
+
+  .news-post__date::before {
+    content: "";
+    position: absolute;
+    top: 4px;
+    left: 0;
+    width: 1px;
+    height: 12px;
+    background: var(--news-link);
+  }
+
+  .news-post__date a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .news-post__figure {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    width: 156px;
+    margin: 0;
+    overflow: hidden;
+    border-radius: 6px;
+    background: #e6ebf1;
+    align-self: start;
+  }
+
+  .news-post__figure a {
+    display: block;
+  }
+
+  .news-post__figure img {
+    display: block;
+    width: 100%;
+    height: 98px;
+    object-fit: cover;
+  }
+
+  .news-index.is-grid .news-index__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .news-index.is-grid .news-index__copy {
+    display: none;
+  }
+
+  .news-index.is-grid .news-index__list {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px 14px;
+    align-items: start;
+  }
+
+  .news-index.is-grid .news-index__empty {
+    grid-column: 1 / -1;
+  }
+
+  .news-index.is-grid .news-post,
+  .news-index.is-grid .news-post--no-media {
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: none;
+    grid-template-rows: none;
+    gap: 6px;
+    padding: 0;
+    border-top: 0;
+  }
+
+  .news-index.is-grid .news-post__header,
+  .news-index.is-grid .news-post__date,
+  .news-index.is-grid .news-post__figure {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .news-index.is-grid .news-post__cat {
+    margin: 0;
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  .news-index.is-grid .news-post__title {
+    font-size: 13px;
+    line-height: 18px;
+    letter-spacing: -0.1px;
+  }
+
+  .news-index.is-grid .news-post__date {
+    margin-top: 0;
+    align-self: start;
+    font-size: 12px;
+    line-height: 16px;
+    padding-left: 10px;
+  }
+
+  .news-index.is-grid .news-post__date::before {
+    top: 2px;
+    height: 10px;
+  }
+
+  .news-index.is-grid .news-post__figure {
+    order: -1;
+    width: 100%;
+    border-radius: 5px;
+  }
+
+  .news-index.is-grid .news-post__figure img {
+    height: auto;
+    aspect-ratio: 16 / 10;
+  }
+
+  @media (max-width: 920px) {
+    .news-index {
+      padding: 104px 0 72px;
+    }
+
+    .news-index__layout {
+      grid-template-columns: 1fr;
+      row-gap: 28px;
+    }
+
+    .news-index.is-grid .news-index__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .news-search {
+      flex: 1 1 100%;
+      width: 100%;
+    }
+
+    .news-filter {
+      margin-left: 0;
+    }
+
+    .news-view {
+      margin-left: auto;
+    }
+
+    .news-post,
+    .news-post--no-media {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto;
+      row-gap: 16px;
+    }
+
+    .news-post__header,
+    .news-post__date,
+    .news-post__figure {
+      grid-column: 1;
+      grid-row: auto;
+    }
+
+    .news-post__figure {
+      width: 100%;
+    }
+
+    .news-post__figure img {
+      height: auto;
+      aspect-ratio: 16 / 9;
+    }
+  }
+
+  @media (max-width: 800px) {
+    .news-index__inner {
+      width: calc(100% - 48px);
+    }
+
+    .news-index__copy h1 {
+      font-size: 22px;
+    }
+
+    .news-post__title {
+      font-size: 16px;
+      line-height: 24px;
+    }
+  }
+</style>
