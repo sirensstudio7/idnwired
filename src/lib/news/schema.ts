@@ -11,12 +11,10 @@ export const ARTICLE_STATUSES = ["draft", "published"] as const;
 export type ArticleStatus = (typeof ARTICLE_STATUSES)[number];
 
 export const ARTICLE_CATEGORIES = [
-  "Market",
-  "Media",
-  "Distribution",
-  "SEO",
-  "Sectors",
-  "Insights",
+  "Regulation",
+  "Business",
+  "Tech",
+  "People",
 ] as const;
 export type ArticleCategory = (typeof ARTICLE_CATEGORIES)[number];
 
@@ -246,10 +244,10 @@ export function parseArticleInput(
   const excerpt = trimStr(raw.excerpt, 220);
   const seo_title = optionalStr(raw.seo_title, 70);
   const seo_description = optionalStr(raw.seo_description, 160);
-  const categoryRaw = trimStr(raw.category, 40) || "Insights";
+  const categoryRaw = trimStr(raw.category, 40) || "Business";
   const category = ARTICLE_CATEGORIES.includes(categoryRaw as ArticleCategory)
     ? categoryRaw
-    : "Insights";
+    : "Business";
   const cover_image_url = trimStr(raw.cover_image_url, 500);
   const cover_image_alt = trimStr(raw.cover_image_alt, 160);
   const canonical_url = optionalStr(raw.canonical_url, 500);

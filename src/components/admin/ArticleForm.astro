@@ -1,13 +1,15 @@
 ---
 import { articleBodyToHtml } from "../../lib/news/html";
-import { ARTICLE_CATEGORIES, type ArticleRow } from "../../lib/news/schema";
+import { HOMEPAGE_HIGHLIGHT_LIMIT } from "../../lib/news/highlights";
+import { ARTICLE_CATEGORIES, type ArticleCategory, type ArticleRow } from "../../lib/news/schema";
 import AdminCustomSelect from "./AdminCustomSelect.astro";
 
 interface Props {
   article?: ArticleRow | null;
+  highlightUsed?: number;
 }
 
-const { article = null } = Astro.props;
+const { article = null, highlightUsed = 0 } = Astro.props;
 const isEdit = Boolean(article);
 const action = isEdit ? `/api/admin/articles/${article!.id}` : "/api/admin/articles";
 const method = isEdit ? "PATCH" : "POST";
@@ -17,11 +19,25 @@ const defaultAuthor = article?.author_name ?? "IDNWIRED editorial";
 const defaultRole = article?.author_role ?? "Press desk";
 const editorHtml = articleBodyToHtml(article?.body_markdown ?? "");
 const statusValue = article?.status === "published" ? "published" : "draft";
-const categoryValue = article?.category ?? "Insights";
+const categoryValue =
+  article?.category && ARTICLE_CATEGORIES.includes(article.category as ArticleCategory)
+    ? article.category
+    : "Business";
 const featuredValue = article?.featured_on_home ? "yes" : "no";
+const highlightOwnsSlot = Boolean(article?.featured_on_home && article?.status === "published");
+const highlightSlotsFull = highlightUsed >= HOMEPAGE_HIGHLIGHT_LIMIT && !highlightOwnsSlot;
 ---
 
-<form class="admin-article-form" data-article-form data-action={action} data-method={method} novalidate>
+<form
+  class="admin-article-form"
+  data-article-form
+  data-action={action}
+  data-method={method}
+  data-highlight-used={highlightUsed}
+  data-highlight-limit={HOMEPAGE_HIGHLIGHT_LIMIT}
+  data-highlight-owned={highlightOwnsSlot ? "1" : "0"}
+  novalidate
+>
   <p class="admin-notice admin-notice--error" data-article-error hidden></p>
 
   <div class="admin-article-grid">
@@ -171,7 +187,7 @@ const featuredValue = article?.featured_on_home ? "yes" : "no";
                 </svg>
               </button>
               <span class="admin-tip__bubble" id="landing-page-tip" role="tooltip">
-                Highlight puts this story in the homepage news carousel.
+                The homepage carousel holds {HOMEPAGE_HIGHLIGHT_LIMIT} stories. Highlight uses one slot.
               </span>
             </span>
           </div>
@@ -181,19 +197,72 @@ const featuredValue = article?.featured_on_home ? "yes" : "no";
             value={featuredValue}
             options={[
               { value: "no", label: "No" },
-              { value: "yes", label: "Highlight" },
+              {
+                value: "yes",
+                label: highlightSlotsFull ? "Highlight (full)" : "Highlight",
+                disabled: highlightSlotsFull,
+              },
             ]}
           />
+          <small data-highlight-slots>
+            {
+              highlightSlotsFull
+                ? `${highlightUsed} of ${HOMEPAGE_HIGHLIGHT_LIMIT} landing page slots filled. Turn Highlight off on another published story first.`
+                : `${highlightUsed} of ${HOMEPAGE_HIGHLIGHT_LIMIT} landing page slots filled`
+            }
+          </small>
         </div>
         <div class="admin-article-actions">
           <button class="admin-btn admin-btn--primary" type="submit" data-article-submit>
-            {isEdit ? "Save article" : "Create article"}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M5 13.5 9.5 18 19 7.5"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+            </svg>
+            <span data-article-submit-label>{isEdit ? "Save article" : "Create article"}</span>
           </button>
           {
-            isEdit && article?.status === "published" ? (
-              <a class="admin-btn" href={`/news/${article.slug}`} target="_blank" rel="noopener noreferrer">
-                View live
-              </a>
+            isEdit && article ? (
+              <div class="admin-article-actions__row">
+                {article.status === "published" ? (
+                  <a
+                    class="admin-btn"
+                    href={`/news/${article.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path
+                        d="M10 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4M14 4h6v6M10 14 20 4"
+                        stroke="currentColor"
+                        stroke-width="1.75"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"></path>
+                    </svg>
+                    View live
+                  </a>
+                ) : null}
+                <button
+                  class="admin-btn admin-btn--danger"
+                  type="button"
+                  data-article-delete
+                  data-id={article.id}
+                  data-title={article.title}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path
+                      d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"></path>
+                  </svg>
+                  Delete
+                </button>
+              </div>
             ) : null
           }
         </div>
@@ -368,7 +437,9 @@ const featuredValue = article?.featured_on_home ? "yes" : "no";
 
 <script>
   import { bindArticleEditor } from "./article-editor";
+  import { confirmAdminAction } from "./confirm-dialog";
   import { bindAdminCustomSelects } from "./custom-select";
+  import { deleteArticle } from "./delete-article";
 
   function slugify(value: string) {
     return value
@@ -392,6 +463,7 @@ const featuredValue = article?.featured_on_home ? "yes" : "no";
     const seoOverride = form.querySelector("[data-seo-override]") as HTMLTextAreaElement;
     const errorBox = form.querySelector("[data-article-error]") as HTMLElement;
     const submit = form.querySelector("[data-article-submit]") as HTMLButtonElement;
+    const submitLabel = submit.querySelector("[data-article-submit-label]");
     const slugPreviews = form.querySelectorAll("[data-slug-preview]");
     const titlePreview = form.querySelector("[data-seo-title-preview]");
     const descPreview = form.querySelector("[data-seo-desc-preview]");
@@ -517,9 +589,40 @@ const featuredValue = article?.featured_on_home ? "yes" : "no";
         errorBox.hidden = false;
         return;
       }
+      const dataPreview = new FormData(form);
+      const wantsHighlight = String(dataPreview.get("featured_on_home") ?? "") === "yes";
+      const wantsPublish = String(dataPreview.get("status") ?? "") === "published";
+      const used = Number(form.dataset.highlightUsed ?? "0");
+      const limit = Number(form.dataset.highlightLimit ?? "6");
+      const ownsSlot = form.dataset.highlightOwned === "1";
+      if (wantsHighlight && wantsPublish && used >= limit && !ownsSlot) {
+        errorBox.textContent = `The landing page only has ${limit} highlight slots. Turn Highlight off on another published story first.`;
+        errorBox.hidden = false;
+        return;
+      }
+
+      const isEdit = form.dataset.method === "PATCH";
+      const slug = String(dataPreview.get("slug") ?? "").trim();
       submit.disabled = true;
-      const previous = submit.textContent;
-      submit.textContent = "Saving…";
+      const saveOk = await confirmAdminAction({
+        title: isEdit ? "Save article?" : "Create article?",
+        body: isEdit
+          ? wantsPublish
+            ? `This will update the live story${slug ? ` at /news/${slug}` : ""}.`
+            : "Save the latest changes to this draft."
+          : wantsPublish
+            ? "This will create the article and publish it immediately."
+            : "This will create the article as a draft.",
+        confirmLabel: isEdit ? "Save article" : "Create article",
+      });
+      if (!saveOk) {
+        submit.disabled = false;
+        return;
+      }
+
+      const previous = submitLabel?.textContent ?? submit.textContent;
+      if (submitLabel) submitLabel.textContent = "Saving…";
+      else submit.textContent = "Saving…";
 
       const data = new FormData(form);
       const payload = Object.fromEntries(
@@ -537,7 +640,8 @@ const featuredValue = article?.featured_on_home ? "yes" : "no";
           errorBox.textContent = json.error ?? "Could not save.";
           errorBox.hidden = false;
           submit.disabled = false;
-          submit.textContent = previous;
+          if (submitLabel) submitLabel.textContent = previous;
+          else submit.textContent = previous;
           return;
         }
         if (form.dataset.method === "POST" && json.id) {
@@ -552,8 +656,20 @@ const featuredValue = article?.featured_on_home ? "yes" : "no";
         errorBox.textContent = "Network error. Try again.";
         errorBox.hidden = false;
         submit.disabled = false;
-        submit.textContent = previous;
+        if (submitLabel) submitLabel.textContent = previous;
+        else submit.textContent = previous;
       }
+    });
+
+    const remove = form.querySelector("[data-article-delete]");
+    remove?.addEventListener("click", async () => {
+      if (!(remove instanceof HTMLButtonElement) || remove.disabled) return;
+      const id = remove.dataset.id;
+      if (!id) return;
+      const ok = await deleteArticle(id, remove.dataset.title ?? "");
+      if (!ok) return;
+      remove.disabled = true;
+      window.location.href = "/admin/articles?deleted=1";
     });
   }
 

@@ -2,6 +2,7 @@
 interface Option {
   value: string;
   label: string;
+  disabled?: boolean;
 }
 
 interface Props {
@@ -46,6 +47,8 @@ const triggerId = `${name}-select-trigger`;
             role="option"
             data-value={option.value}
             aria-selected={option.value === selected?.value}
+            disabled={option.disabled}
+            aria-disabled={option.disabled ? "true" : undefined}
           >
             {option.label}
           </button>

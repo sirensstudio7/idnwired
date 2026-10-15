@@ -34,6 +34,7 @@ export function bindAdminCustomSelect(root: Element) {
 
   options.forEach((opt) => {
     opt.addEventListener("click", () => {
+      if (opt.hasAttribute("disabled") || opt.getAttribute("aria-disabled") === "true") return;
       const value = opt.getAttribute("data-value");
       if (value == null) return;
       if (hidden) hidden.value = value;

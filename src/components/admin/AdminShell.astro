@@ -1,5 +1,6 @@
 ---
 import { INQUIRY_STATUSES } from "../../lib/inquiries/schema";
+import AdminConfirm from "./AdminConfirm.astro";
 
 interface Props {
   statusFilter?: string;
@@ -206,6 +207,7 @@ const initial = userEmail?.charAt(0).toUpperCase() ?? "A";
       <slot />
     </div>
   </div>
+  <AdminConfirm />
 </div>
 
 <script>

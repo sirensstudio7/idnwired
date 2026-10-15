@@ -6,6 +6,7 @@ import {
   type NewsItem,
 } from "../../data/news";
 import { decorateArticleHtml, articleBodyToHtml } from "./html";
+import { HOMEPAGE_HIGHLIGHT_LIMIT } from "./highlights";
 import { bodyToBlocks, type ArticleRow } from "./schema";
 
 export interface NewsArticle extends NewsItem {
@@ -135,18 +136,19 @@ export async function getPublishedNewsItems(): Promise<NewsArticle[]> {
 
 export async function getHomepageNewsItems(): Promise<NewsArticle[]> {
   const supabase = publicClient();
-  if (!supabase) return newsItems.map(withStaticSource);
+  if (!supabase) return newsItems.map(withStaticSource).slice(0, HOMEPAGE_HIGHLIGHT_LIMIT);
 
   const { data, error } = await supabase
     .from("articles")
     .select("*")
     .eq("status", "published")
     .eq("featured_on_home", true)
-    .order("published_at", { ascending: false });
+    .order("published_at", { ascending: false })
+    .limit(HOMEPAGE_HIGHLIGHT_LIMIT);
 
   if (error) {
     console.error("homepage articles:", error.message);
-    return newsItems.map(withStaticSource);
+    return newsItems.map(withStaticSource).slice(0, HOMEPAGE_HIGHLIGHT_LIMIT);
   }
 
   if (!data?.length) return [];

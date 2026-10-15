@@ -62,7 +62,7 @@ const authors = {
 export const newsItems: NewsItem[] = [
   {
     slug: "investment-flows-beyond-java",
-    category: "Market",
+    category: "Business",
     date: "Oct 2025",
     dateLabel: "October 14, 2025",
     datetime: "2025-10-14",
@@ -125,7 +125,7 @@ export const newsItems: NewsItem[] = [
   },
   {
     slug: "editors-tighten-ai-pitches",
-    category: "Media",
+    category: "People",
     date: "Sep 2025",
     dateLabel: "September 18, 2025",
     datetime: "2025-09-18",
@@ -184,7 +184,7 @@ export const newsItems: NewsItem[] = [
   },
   {
     slug: "creator-clips-press-line",
-    category: "Distribution",
+    category: "People",
     date: "Aug 2025",
     dateLabel: "August 21, 2025",
     datetime: "2025-08-21",
@@ -243,7 +243,7 @@ export const newsItems: NewsItem[] = [
   },
   {
     slug: "structured-releases-seo",
-    category: "SEO",
+    category: "Tech",
     date: "Jul 2025",
     dateLabel: "July 9, 2025",
     datetime: "2025-07-09",
@@ -302,7 +302,7 @@ export const newsItems: NewsItem[] = [
   },
   {
     slug: "fintech-healthcare-coverage",
-    category: "Sectors",
+    category: "Regulation",
     date: "Jun 2025",
     dateLabel: "June 12, 2025",
     datetime: "2025-06-12",
@@ -361,7 +361,7 @@ export const newsItems: NewsItem[] = [
   },
   {
     slug: "national-reach-media-map",
-    category: "Insights",
+    category: "Business",
     date: "May 2025",
     dateLabel: "May 8, 2025",
     datetime: "2025-05-08",

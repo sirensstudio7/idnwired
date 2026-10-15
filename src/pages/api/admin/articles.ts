@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { assertHomepageHighlightSlot } from "../../../lib/news/highlights";
 import { parseArticleInput } from "../../../lib/news/schema";
 import { requireAdminUser } from "../../../lib/supabase/server";
 
@@ -26,6 +27,14 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   const parsed = parseArticleInput(json);
   if (!parsed.ok) {
     return new Response(JSON.stringify({ error: parsed.error }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const slot = await assertHomepageHighlightSlot(supabase, parsed.value);
+  if (!slot.ok) {
+    return new Response(JSON.stringify({ error: slot.error }), {
       status: 400,
       headers: { "Content-Type": "application/json" },
     });

@@ -4,12 +4,15 @@ export const prerender = false;
 import ArticleForm from "../../../components/admin/ArticleForm.astro";
 import AdminShell from "../../../components/admin/AdminShell.astro";
 import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { countPublishedHighlights } from "../../../lib/news/highlights";
 import { requireAdminUser } from "../../../lib/supabase/server";
 
-const { user } = await requireAdminUser(Astro.cookies);
+const { supabase, user } = await requireAdminUser(Astro.cookies);
 if (!user) {
   return Astro.redirect("/admin/login");
 }
+
+const highlightUsed = await countPublishedHighlights(supabase);
 ---
 
 <AdminLayout title="New article">
@@ -27,6 +30,6 @@ if (!user) {
       </p>
     </header>
 
-    <ArticleForm />
+    <ArticleForm highlightUsed={highlightUsed} />
   </AdminShell>
 </AdminLayout>
