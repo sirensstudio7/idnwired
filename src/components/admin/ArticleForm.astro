@@ -120,6 +120,24 @@ const highlightSlotsFull = highlightUsed >= HOMEPAGE_HIGHLIGHT_LIMIT && !highlig
                 <button type="button" class="admin-editor__tip-btn" data-command="blockquote" title="Quote" aria-label="Quote">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M7 17h4l2-6V7H7v4h4M15 17h4l2-6V7h-6v4h4"/></svg>
                 </button>
+                <span class="admin-editor__tip-sep" aria-hidden="true"></span>
+                <button type="button" class="admin-editor__tip-btn admin-editor__tip-btn--color" data-color-toggle title="Text color" aria-label="Text color" aria-expanded="false">
+                  <span class="admin-editor__tip-a">A<span class="admin-editor__tip-a-bar" data-color-bar></span></span>
+                </button>
+              </div>
+              <div class="admin-editor__colors" data-color-popover hidden>
+                <button type="button" class="admin-editor__swatch" data-color="#0a2540" style="background:#0a2540" title="Ink" aria-label="Ink"></button>
+                <button type="button" class="admin-editor__swatch" data-color="#425466" style="background:#425466" title="Muted" aria-label="Muted"></button>
+                <button type="button" class="admin-editor__swatch" data-color="#635bff" style="background:#635bff" title="Brand" aria-label="Brand"></button>
+                <button type="button" class="admin-editor__swatch" data-color="#0e7490" style="background:#0e7490" title="Teal" aria-label="Teal"></button>
+                <button type="button" class="admin-editor__swatch" data-color="#188038" style="background:#188038" title="Green" aria-label="Green"></button>
+                <button type="button" class="admin-editor__swatch" data-color="#ca8a04" style="background:#ca8a04" title="Gold" aria-label="Gold"></button>
+                <button type="button" class="admin-editor__swatch" data-color="#c2410c" style="background:#c2410c" title="Orange" aria-label="Orange"></button>
+                <button type="button" class="admin-editor__swatch" data-color="#991b1b" style="background:#991b1b" title="Red" aria-label="Red"></button>
+                <label class="admin-editor__swatch admin-editor__swatch--custom" title="Custom color">
+                  <input type="color" value="#0a2540" data-color-custom aria-label="Custom text color" />
+                </label>
+                <button type="button" class="admin-editor__swatch admin-editor__swatch--reset" data-color-reset title="Default color" aria-label="Default color">A</button>
               </div>
               <div class="admin-editor__tip-link" data-link-popover hidden>
                 <input type="url" placeholder="Paste a link" data-link-url aria-label="Link URL" />
@@ -324,23 +342,24 @@ const highlightSlotsFull = highlightUsed >= HOMEPAGE_HIGHLIGHT_LIMIT && !highlig
         <h2>Cover image</h2>
         <div class="admin-upload" data-image-upload="cover">
           <input type="hidden" name="cover_image_url" value={article?.cover_image_url ?? ""} data-upload-url />
-          <div class="admin-upload__preview admin-upload__preview--cover" data-upload-preview>
+          <input
+            id="cover-image-file"
+            class="admin-sr-only"
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+            data-upload-file
+          />
+          <label class="admin-upload__preview admin-upload__preview--cover" for="cover-image-file" data-upload-preview>
             {
               article?.cover_image_url ? (
                 <img src={article.cover_image_url} alt="" />
               ) : (
-                <span>No cover yet</span>
+                <span>Click to upload a cover</span>
               )
             }
-          </div>
+          </label>
           <div class="admin-upload__actions">
-            <label class="admin-btn admin-upload__btn">
-              <input
-                class="admin-sr-only"
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-                data-upload-file
-              />
+            <label class="admin-btn admin-upload__btn" for="cover-image-file">
               <span data-upload-label>Upload image</span>
             </label>
             <span class="admin-tip">
@@ -389,8 +408,15 @@ const highlightSlotsFull = highlightUsed >= HOMEPAGE_HIGHLIGHT_LIMIT && !highlig
         <div class="admin-upload admin-upload--avatar" data-image-upload="author">
           <span class="admin-field"><span>Photo</span></span>
           <input type="hidden" name="author_avatar_url" value={article?.author_avatar_url ?? ""} data-upload-url />
+          <input
+            id="author-image-file"
+            class="admin-sr-only"
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+            data-upload-file
+          />
           <div class="admin-upload__row">
-            <div class="admin-upload__preview admin-upload__preview--avatar" data-upload-preview>
+            <label class="admin-upload__preview admin-upload__preview--avatar" for="author-image-file" data-upload-preview>
               {
                 article?.author_avatar_url ? (
                   <img src={article.author_avatar_url} alt="" />
@@ -398,15 +424,9 @@ const highlightSlotsFull = highlightUsed >= HOMEPAGE_HIGHLIGHT_LIMIT && !highlig
                   <span>No photo</span>
                 )
               }
-            </div>
+            </label>
             <div class="admin-upload__actions">
-              <label class="admin-btn admin-upload__btn">
-                <input
-                  class="admin-sr-only"
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-                  data-upload-file
-                />
+              <label class="admin-btn admin-upload__btn" for="author-image-file">
                 <span data-upload-label>Upload photo</span>
               </label>
               <span class="admin-tip">
@@ -550,6 +570,7 @@ const highlightSlotsFull = highlightUsed >= HOMEPAGE_HIGHLIGHT_LIMIT && !highlig
         submit.disabled = true;
         if (status) {
           status.hidden = false;
+          status.classList.remove("is-error");
           status.textContent = "Uploading…";
         }
         if (label) label.textContent = "Uploading…";
@@ -562,16 +583,23 @@ const highlightSlotsFull = highlightUsed >= HOMEPAGE_HIGHLIGHT_LIMIT && !highlig
           const res = await fetch("/api/admin/media", { method: "POST", body });
           const json = (await res.json()) as { error?: string; url?: string };
           if (!res.ok || !json.url) {
-            if (status) status.textContent = json.error ?? "Upload failed.";
+            if (status) {
+              status.classList.add("is-error");
+              status.textContent = json.error ?? "Upload failed.";
+            }
             return;
           }
           urlField.value = json.url;
           setPreview(root, json.url);
           if (status) {
-            status.textContent = "Uploaded.";
+            status.classList.remove("is-error");
+            status.textContent = "Uploaded. Save the article to keep this cover.";
           }
         } catch {
-          if (status) status.textContent = "Upload failed. Try again.";
+          if (status) {
+            status.classList.add("is-error");
+            status.textContent = "Upload failed. Try again.";
+          }
         } finally {
           uploadsInFlight = Math.max(0, uploadsInFlight - 1);
           if (label) label.textContent = kind === "author" ? "Upload photo" : "Upload image";

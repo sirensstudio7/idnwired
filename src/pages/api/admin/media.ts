@@ -75,7 +75,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     });
   }
 
-  const { error } = await supabase.storage.from(ARTICLE_IMAGE_BUCKET).upload(path, buffer, {
+  const { error } = await supabase.storage.from(ARTICLE_IMAGE_BUCKET).upload(path, new Uint8Array(buffer), {
     contentType: ARTICLE_IMAGE_OUTPUT_TYPE,
     upsert: false,
     cacheControl: "31536000",
@@ -83,7 +83,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
   if (error) {
     console.error("article image upload:", error.message);
-    return new Response(JSON.stringify({ error: "Could not upload the image." }), {
+    return new Response(JSON.stringify({ error: error.message || "Could not upload the image." }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });

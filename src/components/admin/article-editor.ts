@@ -52,10 +52,15 @@ export function bindArticleEditor(
   const status = root.querySelector("[data-editor-status]") as HTMLElement | null;
   const linkPopover = root.querySelector("[data-link-popover]") as HTMLElement | null;
   const linkUrl = root.querySelector("[data-link-url]") as HTMLInputElement | null;
+  const colorPopover = root.querySelector("[data-color-popover]") as HTMLElement | null;
+  const colorToggle = root.querySelector("[data-color-toggle]") as HTMLButtonElement | null;
+  const colorBar = root.querySelector("[data-color-bar]") as HTMLElement | null;
+  const colorCustom = root.querySelector("[data-color-custom]") as HTMLInputElement | null;
   const savedRange = { current: null as Range | null };
   let busy = false;
   let plusOpen = false;
   let linkMode = false;
+  let colorMode = false;
 
   if (!canvas || !toolbar) {
     return {
@@ -95,11 +100,41 @@ export function bindArticleEditor(
     savedRange.current = selection.getRangeAt(0).cloneRange();
   };
 
+  const closeColor = () => {
+    colorMode = false;
+    if (colorPopover) colorPopover.hidden = true;
+    colorToggle?.classList.remove("is-active");
+    colorToggle?.setAttribute("aria-expanded", "false");
+  };
+
   const hideTip = () => {
     toolbar.hidden = true;
     linkMode = false;
+    closeColor();
     if (linkPopover) linkPopover.hidden = true;
     if (tipMain) tipMain.hidden = false;
+  };
+
+  const toHexColor = (value: string): string | null => {
+    const trimmed = value.trim().toLowerCase();
+    if (/^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/.test(trimmed)) {
+      if (trimmed.length === 4) {
+        return `#${trimmed[1]}${trimmed[1]}${trimmed[2]}${trimmed[2]}${trimmed[3]}${trimmed[3]}`;
+      }
+      return trimmed;
+    }
+    const rgb = trimmed.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+    if (!rgb) return null;
+    return `#${[rgb[1], rgb[2], rgb[3]].map((n) => Number(n).toString(16).padStart(2, "0")).join("")}`;
+  };
+
+  const syncColorUi = (current: string | null) => {
+    if (colorBar) colorBar.style.background = current || "currentColor";
+    if (colorCustom && current) colorCustom.value = current;
+    colorPopover?.querySelectorAll("[data-color]").forEach((swatch) => {
+      const hex = toHexColor(swatch.getAttribute("data-color") ?? "");
+      swatch.classList.toggle("is-active", Boolean(current && hex === current));
+    });
   };
 
   const hidePlus = () => {
@@ -120,12 +155,14 @@ export function bindArticleEditor(
   const updateTip = () => {
     const selection = window.getSelection();
     if (linkMode) return;
-    if (
-      !selection ||
-      selection.rangeCount === 0 ||
-      selection.isCollapsed ||
-      !canvas.contains(selection.anchorNode)
-    ) {
+    const hasSelection = Boolean(
+      selection &&
+        selection.rangeCount > 0 &&
+        !selection.isCollapsed &&
+        canvas.contains(selection.anchorNode),
+    );
+    if (!hasSelection) {
+      if (colorMode) return;
       hideTip();
       return;
     }
@@ -135,6 +172,7 @@ export function bindArticleEditor(
     toolbar.hidden = false;
     if (tipMain) tipMain.hidden = false;
     if (linkPopover) linkPopover.hidden = true;
+    if (colorPopover) colorPopover.hidden = !colorMode;
 
     toolbar.querySelectorAll("[data-command]").forEach((button) => {
       const command = button.getAttribute("data-command");
@@ -146,8 +184,10 @@ export function bindArticleEditor(
       button.classList.toggle("is-active", button.getAttribute("data-block") === tag);
     });
     toolbar.querySelector("[data-command='blockquote']")?.classList.toggle("is-active", tag === "blockquote");
+    syncColorUi(toHexColor(document.queryCommandValue("foreColor") || ""));
 
-    const rect = selection.getRangeAt(0).getBoundingClientRect();
+    const range = selection!.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
     const rootRect = root.getBoundingClientRect();
     const tipW = toolbar.offsetWidth || 220;
     const tipH = toolbar.offsetHeight || 42;
@@ -155,6 +195,15 @@ export function bindArticleEditor(
     const above = rect.top - rootRect.top - tipH - 10;
     const y = above < 8 ? rect.bottom - rootRect.top + 10 : above;
     placeOver(toolbar, x, y);
+  };
+
+  const applyColor = (color: string | null) => {
+    canvas.focus();
+    restoreSelection();
+    document.execCommand("styleWithCSS", false, "true");
+    document.execCommand("foreColor", false, color ?? "inherit");
+    sync();
+    updateTip();
   };
 
   const updatePlus = () => {
@@ -208,6 +257,7 @@ export function bindArticleEditor(
     canvas.focus();
     restoreSelection();
     if (command === "createLink") {
+      closeColor();
       linkMode = true;
       if (tipMain) tipMain.hidden = true;
       if (linkPopover) linkPopover.hidden = false;
@@ -263,6 +313,7 @@ export function bindArticleEditor(
   };
 
   document.execCommand("defaultParagraphSeparator", false, "p");
+  document.execCommand("styleWithCSS", false, "true");
   syncEmpty();
 
   canvas.addEventListener("input", () => {
@@ -331,7 +382,8 @@ export function bindArticleEditor(
   });
 
   toolbar.addEventListener("mousedown", (event) => {
-    if ((event.target as HTMLElement | null)?.closest("button")) event.preventDefault();
+    const target = event.target as HTMLElement | null;
+    if (target?.closest("button, [data-color-popover], input[type='color']")) event.preventDefault();
   });
 
   toolbar.querySelectorAll("[data-command]").forEach((button) => {
@@ -350,6 +402,33 @@ export function bindArticleEditor(
       sync();
       updateTip();
     });
+  });
+
+  colorToggle?.addEventListener("click", () => {
+    colorMode = !colorMode;
+    if (colorPopover) colorPopover.hidden = !colorMode;
+    colorToggle.classList.toggle("is-active", colorMode);
+    colorToggle.setAttribute("aria-expanded", String(colorMode));
+    if (colorMode) {
+      linkMode = false;
+      if (linkPopover) linkPopover.hidden = true;
+      if (tipMain) tipMain.hidden = false;
+    }
+    updateTip();
+  });
+
+  colorPopover?.querySelectorAll("[data-color]").forEach((swatch) => {
+    swatch.addEventListener("click", () => {
+      applyColor(swatch.getAttribute("data-color"));
+    });
+  });
+
+  colorPopover?.querySelector("[data-color-reset]")?.addEventListener("click", () => {
+    applyColor(null);
+  });
+
+  colorCustom?.addEventListener("input", () => {
+    applyColor(colorCustom.value);
   });
 
   plus?.addEventListener("mousedown", (event) => event.preventDefault());

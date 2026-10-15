@@ -21,6 +21,7 @@ const ALLOWED_TAGS = new Set([
   "br",
   "a",
   "img",
+  "span",
 ]);
 
 export function looksLikeHtml(value: string): boolean {
@@ -71,8 +72,45 @@ function sanitizeUrl(value: string, protocols: string[]): string | null {
   return null;
 }
 
+function sanitizeCssColor(value: string): string | null {
+  const trimmed = value.trim().replace(/[\u0000-\u001F\u007F]/g, "");
+  if (!trimmed || /url\s*\(|expression\s*\(|javascript:/i.test(trimmed)) return null;
+  if (/^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(trimmed)) return trimmed.toLowerCase();
+
+  const rgb = trimmed.match(
+    /^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*(0|1|0?\.\d+))?\s*\)$/i,
+  );
+  if (rgb) {
+    const r = Number(rgb[1]);
+    const g = Number(rgb[2]);
+    const b = Number(rgb[3]);
+    if ([r, g, b].some((n) => n > 255)) return null;
+    return rgb[4] === undefined ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${rgb[4]})`;
+  }
+
+  const modern = trimmed.match(
+    /^rgba?\(\s*(\d{1,3})\s+(\d{1,3})\s+(\d{1,3})(?:\s*\/\s*(0|1|0?\.\d+|\d{1,3}%))?\s*\)$/i,
+  );
+  if (modern) {
+    const r = Number(modern[1]);
+    const g = Number(modern[2]);
+    const b = Number(modern[3]);
+    if ([r, g, b].some((n) => n > 255)) return null;
+    return modern[4] === undefined ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${modern[4]})`;
+  }
+
+  return null;
+}
+
+function extractStyleColor(style: string): string | null {
+  const match = style.match(/(?:^|;)\s*color\s*:\s*([^;]+)/i);
+  return match ? sanitizeCssColor(match[1]) : null;
+}
+
 function sanitizeAttrs(tag: string, raw: string): string {
   const out: string[] = [];
+  let align: string | null = null;
+  let color: string | null = null;
   const re = /([a-zA-Z:_][a-zA-Z0-9:_.-]*)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g;
   let match: RegExpExecArray | null;
   while ((match = re.exec(raw))) {
@@ -93,10 +131,18 @@ function sanitizeAttrs(tag: string, raw: string): string {
     } else if (tag === "img" && name === "alt") {
       out.push(`alt="${escapeAttr(value.slice(0, 160))}"`);
     } else if (name === "style") {
-      const align = value.match(/text-align\s*:\s*(left|center|right|justify)/i);
-      if (align) out.push(`style="text-align: ${align[1].toLowerCase()}"`);
+      const nextAlign = value.match(/text-align\s*:\s*(left|center|right|justify)/i);
+      if (nextAlign) align = nextAlign[1].toLowerCase();
+      color = extractStyleColor(value) ?? color;
+    } else if (name === "color") {
+      color = sanitizeCssColor(value) ?? color;
     }
   }
+
+  const styleParts: string[] = [];
+  if (align) styleParts.push(`text-align: ${align}`);
+  if (color) styleParts.push(`color: ${color}`);
+  if (styleParts.length) out.push(`style="${styleParts.join("; ")}"`);
 
   if (tag === "img" && !out.some((item) => item.startsWith("src="))) return "";
   if (tag === "a" && !out.some((item) => item.startsWith("href="))) return "";
@@ -108,6 +154,7 @@ function rewriteTag(name: string): string | null {
   if (name === "b") return "strong";
   if (name === "i") return "em";
   if (name === "strike" || name === "del") return "s";
+  if (name === "font") return "span";
   if (ALLOWED_TAGS.has(name)) return name;
   return null;
 }

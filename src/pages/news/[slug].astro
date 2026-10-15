@@ -194,6 +194,22 @@ const shareLinks = [
 
         <section class="blog-body">
           {
+            item.image ? (
+              <figure class="blog-figure">
+                <div class="blog-figure__card">
+                  <img
+                    src={item.image}
+                    alt={item.imageAlt || ""}
+                    width={1620}
+                    height={900}
+                    loading="eager"
+                    decoding="async"
+                  />
+                </div>
+              </figure>
+            ) : null
+          }
+          {
             item.bodyHtml ? (
               <div class="blog-rich" set:html={item.bodyHtml} />
             ) : (
@@ -425,6 +441,13 @@ const shareLinks = [
   .blog-body :global(.blog-list strong) {
     font-weight: 500;
     color: var(--blog-ink);
+  }
+
+  .blog-body :global(.blog-p [style*="color"] strong),
+  .blog-body :global(.blog-list [style*="color"] strong),
+  .blog-body :global(.blog-p strong[style*="color"]),
+  .blog-body :global(.blog-list strong[style*="color"]) {
+    color: inherit;
   }
 
   .blog-body :global(.blog-p em),

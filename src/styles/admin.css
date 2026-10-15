@@ -1221,7 +1221,8 @@
   position: absolute;
   z-index: 5;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   min-height: 42px;
   padding: 4px;
   background: #1a1933;
@@ -1279,9 +1280,82 @@
   font-weight: 600;
 }
 
+.admin-editor__tip-a {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.admin-editor__tip-a-bar {
+  display: block;
+  width: 12px;
+  height: 3px;
+  margin-top: 3px;
+  border-radius: 1px;
+  background: currentColor;
+}
+
 .admin-editor__tip-btn:hover,
 .admin-editor__tip-btn.is-active {
   background: rgba(255, 255, 255, 0.12);
+}
+
+.admin-editor__colors {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 6px 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.admin-editor__colors[hidden] {
+  display: none;
+}
+
+.admin-editor__swatch {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+}
+
+.admin-editor__swatch.is-active {
+  box-shadow: 0 0 0 2px #1a1933, 0 0 0 3px #fff;
+}
+
+.admin-editor__swatch--reset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background: transparent;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.admin-editor__swatch--custom {
+  position: relative;
+  overflow: hidden;
+  background: conic-gradient(#635bff, #e11d48, #ca8a04, #188038, #0e7490, #635bff);
+}
+
+.admin-editor__swatch--custom input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
 }
 
 .admin-editor__tip-link {
@@ -1512,6 +1586,12 @@
 .admin-upload__preview--cover {
   aspect-ratio: 16 / 9;
   border-radius: 8px;
+  cursor: pointer;
+}
+
+.admin-upload__preview--cover:hover,
+.admin-upload__preview--avatar:hover {
+  border-color: var(--a-accent);
 }
 
 .admin-upload__preview--avatar {
@@ -1519,6 +1599,7 @@
   height: 72px;
   margin: 0;
   border-radius: 50%;
+  cursor: pointer;
 }
 
 .admin-upload__preview img {
@@ -1613,6 +1694,10 @@
   margin: 8px 0 0;
   font-size: 12px;
   color: var(--a-muted);
+}
+
+.admin-upload__status.is-error {
+  color: #991b1b;
 }
 
 .admin-alert {
